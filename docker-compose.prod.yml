@@ -2,12 +2,12 @@ name: dhsx-vtk-chatbot-prod
 
 services:
   chatbot:
-    image: ghcr.io/trungtamlaptrinhspc/dhsx_vtk_chatbot:prod
+    image: ghcr.io/hopquangdo/ai-assistant:prod
     build:
       context: .
       dockerfile: Dockerfile
       cache_from:
-        - ghcr.io/trungtamlaptrinhspc/dhsx_vtk_chatbot:prod
+        - ghcr.io/hopquangdo/ai-assistant:prod
     container_name: dhsx-vtk-chatbot-prod
     ports:
       # Host 8001 -> container 8000 (Dockerfile hardcode uvicorn --port 8000, không đổi qua
