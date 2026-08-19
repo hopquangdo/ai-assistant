@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+
+.env
+.env.prod
+.idea/
+
+*.tar.gz
+
+tests/*_result.jsonl

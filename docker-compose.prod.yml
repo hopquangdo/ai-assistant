@@ -1,0 +1,29 @@
+name: dhsx-vtk-chatbot-prod
+
+services:
+  chatbot:
+    image: ghcr.io/trungtamlaptrinhspc/dhsx_vtk_chatbot:prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - ghcr.io/trungtamlaptrinhspc/dhsx_vtk_chatbot:prod
+    container_name: dhsx-vtk-chatbot-prod
+    ports:
+      # Host 8001 -> container 8000 (Dockerfile hardcode uvicorn --port 8000, không đổi qua
+      # APP_PORT). Nginx proxy_pass http://127.0.0.1:8001 (xem cấu hình nginx) trỏ vào đây.
+      - "127.0.0.1:${CHATBOT_HOST_PORT:-8001}:8000"
+    env_file:
+      - .env.prod
+    environment:
+      # Gọi backend qua tên service trong network dùng chung — KHÔNG dùng localhost, vì
+      # container chatbot và container backend là 2 process mạng riêng biệt.
+      MCP_SERVER_URL: "http://api:8000/mcp"
+    restart: unless-stopped
+    networks:
+      - dhsx_prod_network
+
+networks:
+  dhsx_prod_network:
+    name: dhsx-vtk-prod-network
+    external: true

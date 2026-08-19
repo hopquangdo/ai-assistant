@@ -1,0 +1,160 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  DEPLOY_PATH: /home/ubuntuvtk/home/chatbot
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    name: Build check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m compileall -q app
+
+  docker:
+    name: Build & Push Docker image
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push'
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve image tags
+        id: meta
+        run: |
+          SHA="${GITHUB_SHA::7}"
+          IMAGE_NAME="$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')"
+          echo "tags=${{ env.REGISTRY }}/${IMAGE_NAME}:prod,${{ env.REGISTRY }}/${IMAGE_NAME}:latest,${{ env.REGISTRY }}/${IMAGE_NAME}:sha-${SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha,scope=chatbot-main
+          cache-to: type=gha,mode=max,scope=chatbot-main
+
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.event_name == 'push'
+    timeout-minutes: 10
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve deploy target
+        id: target
+        run: |
+          if [ -z "${{ secrets.SSH_HOST }}" ] || [ -z "${{ secrets.SSH_USER }}" ] || [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "Skip deploy: missing SSH secrets"
+            exit 0
+          fi
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "path=${{ env.DEPLOY_PATH }}" >> "$GITHUB_OUTPUT"
+          echo "compose=docker-compose.prod.yml" >> "$GITHUB_OUTPUT"
+
+      - name: Upload compose file
+        if: steps.target.outputs.enabled == 'true'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.prod.yml"
+          target: ${{ steps.target.outputs.path }}
+
+      - name: Pull and restart chatbot
+        if: steps.target.outputs.enabled == 'true'
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          DEPLOY_PATH: ${{ steps.target.outputs.path }}
+          COMPOSE_FILE: ${{ steps.target.outputs.compose }}
+          GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+          GHCR_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          envs: DEPLOY_PATH,COMPOSE_FILE,GHCR_USERNAME,GHCR_TOKEN
+          script: |
+            set -euo pipefail
+            cd "$DEPLOY_PATH"
+
+            ENV_FILE=".env.prod"
+            PROJECT="dhsx-vtk-chatbot-prod"
+            CONTAINER="dhsx-vtk-chatbot-prod"
+
+            if [ ! -f "$ENV_FILE" ]; then
+              echo "Missing $ENV_FILE in $DEPLOY_PATH"
+              exit 1
+            fi
+
+            if [ -n "${GHCR_TOKEN:-}" ]; then
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-${{ github.actor }}}" --password-stdin
+            fi
+
+            COMPOSE=(docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
+
+            MANAGED_ID="$("${COMPOSE[@]}" ps -q chatbot 2>/dev/null || true)"
+            EXISTING_ID="$(docker ps -aq -f "name=^/${CONTAINER}$" || true)"
+            if [ -n "$EXISTING_ID" ] && [ "$EXISTING_ID" != "$MANAGED_ID" ]; then
+              echo "Removing stale container: $CONTAINER"
+              docker rm -f "$CONTAINER"
+            fi
+
+            "${COMPOSE[@]}" pull chatbot
+            "${COMPOSE[@]}" up -d --no-deps --force-recreate chatbot
+            docker image prune -f

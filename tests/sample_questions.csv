@@ -1,0 +1,35 @@
+id,question
+Q01,Tìm hợp đồng có từ khoá ABC
+Q02,Trạm nào đang tồn đọng ở khu vực Hà Nội?
+Q03,Có vướng mắc nào liên quan trạm XYZ không?
+Q04,Ai đang được phân công cho hợp đồng ABC?
+Q05,Tổng quan hợp đồng hiện tại thế nào?
+Q06,Tình hình nguồn lực đang triển khai ra sao?
+Q07,"Có bao nhiêu vướng mắc đang mở, bao nhiêu quá hạn 30 ngày?"
+Q08,Tổng số phân công hiện tại theo vùng miền?
+Q09,"Tồn đọng trạm BTS hiện tại bao nhiêu, theo nguyên nhân gì?"
+Q10,Sản lượng thế nào?
+Q11,Sản lượng từ 1/7 đến 31/7/2026 là bao nhiêu?
+Q12,So với kỳ trước sản lượng tăng hay giảm?
+Q13,So sánh sản lượng và số vướng mắc đang mở trong tháng này
+Q14,"Tổng quan chung: hợp đồng, nguồn lực và trạm tồn đọng hiện tại thế nào?"
+Q15,Sản lượng tháng 7 là bao nhiêu?
+Q16,"Còn tháng 6 thì sao, tăng hay giảm so với tháng 7?"
+Q17,Thời tiết Hà Nội hôm nay thế nào?
+Q18,Tìm hợp đồng
+Q19,Hợp đồng nào đang vướng mắc nhiều nhất?
+Q20,Hợp đồng nào có sản lượng thấp nhất so với giá trị hợp đồng?
+Q21,Hợp đồng nào có nhiều đối tượng bị hủy nhất?
+Q22,Hợp đồng nào đang vướng pháp lý nhiều nhất?
+Q23,"Vướng mắc nào quá hạn 30 ngày chưa xử lý?"
+Q24,"Trạm nào đã khởi công nhưng 7 ngày rồi không cập nhật tiến độ?"
+Q25,"Cán bộ Vinh đang phụ trách bao nhiêu trạm, trạm nào đang vướng?"
+Q26,Cán bộ Vinh đang phụ trách những trạm nào?
+Q27,"Chương trình GCCC khu vực Bình Dương đang ở đâu rồi?"
+Q28,Khu vực Bình Dương có bao nhiêu trạm đang thi công?
+Q29,Trạm nào có sản lượng bất thường so với bình quân hợp đồng?
+Q30,Tốc độ hoàn thành theo khu vực trong 7 ngày gần đây thế nào?
+Q31,Nhà thầu nào đang hoàn thành nhanh/chậm hơn trung bình hệ thống?
+Q32,Trạm nào chưa có biên bản khảo sát?
+Q33,Hợp đồng nào sắp hết hạn trong vòng 30 ngày?
+Q34,Với tốc độ hiện tại có kịp hoàn thành đúng hạn hợp đồng không?
