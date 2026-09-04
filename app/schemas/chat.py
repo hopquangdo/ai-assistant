@@ -17,3 +17,4 @@ class ChatResponse(BaseModel):
 
     reply: str
     session_id: Optional[str] = None
+    suggestions: list[str] = []

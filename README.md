@@ -7,11 +7,15 @@ MCP từ backend Java (Spring AI).
 
 - Backend Java (`../backend`) đang chạy, cổng mặc định `8080`, endpoint MCP: `http://localhost:8080/mcp`.
 - Python 3.12+ (venv đã có sẵn tại `.venv`, không cần tạo lại).
-- File `.env` ở thư mục gốc `chatbot/` với 2 biến bắt buộc:
+- File `.env` ở thư mục gốc `chatbot/` với các biến:
   ```
   OPENAI_API_KEY=sk-...
   MCP_SERVER_URL=http://localhost:8080/mcp
+  MCP_API_KEY=...        # phải khớp APP_MCP_API_KEY ở backend/.env (backend fail-closed: thiếu key -> 503)
   ```
+  Backend Java gửi khóa qua header `X-API-Key` (không prefix) — header/scheme đã set sẵn trong
+  `app/settings.py`. Client MCP là `dqh.ai_core.MCPClient` / `load_mcp_tools` (gói `package/ai_core`),
+  `app/mcp_client.py` chỉ gọi lại kèm `Settings` của app.
 
 ## Chạy chatbot
 
@@ -48,43 +52,39 @@ Bộ câu hỏi mẫu để test thủ công: `tests/sample_questions.csv` (danh
 
 ## Cấu trúc chính
 
+Kiến trúc: **1 agent ReAct duy nhất** (`langgraph.prebuilt.create_react_agent`), không
+orchestrator/router/responder riêng — agent tự chọn tool MCP, tự gọi, tự viết câu trả lời cuối
+trong cùng 1 vòng lặp. Các gói con trước đây chỉ có đúng 1 file `.py` đã được gộp phẳng vào thẳng
+`app/` cho gọn (không còn `agents/`, `api/`, `config/`, `llm/`, `mcp/`, `tools/` dạng package).
+
 ```
 app/
   main.py              # FastAPI app, nạp tool MCP lúc khởi động
-  api/routes.py         # /chat, /chat/stream
-  graph/                # LangGraph: orchestrator -> module (song song) -> responder
-  agents/
-    orchestrator/        # Quyết định CONTINUE/COMPLETE/ASK_USER + chọn module cần chạy
-    tiendo|nhansu|vanhanh/ # 3 module nghiệp vụ (ReAct agent, tự gọi tool MCP)
-    responder/            # Tổng hợp câu trả lời cuối cùng
-    base.py               # Logic dùng chung để build/chạy 1 module agent
-  prompts/              # System prompt dạng .txt cho từng agent (sửa xong phải restart, xem trên)
-  tools/__init__.py     # Phân nhóm tool MCP theo prefix tên -> module (vd hopdong_* -> tiendo)
-  mcp/client.py          # Kết nối MCP tới backend Java
-  memory.py              # Lưu lịch sử hội thoại theo session_id (in-memory, mất khi restart)
-  utils/time_context.py  # Tiêm ngày hiện tại thật vào system message mỗi lần gọi LLM
+  routes.py            # /health, /chat, /chat/stream (stream trực tiếp từ agent, không qua graph bọc ngoài)
+  agent.py             # Agent ReAct duy nhất: get_agent()/run_agent(), guard recursion_limit, log tool call + token/cost
+  settings.py          # Cấu hình đọc từ .env (pydantic-settings)
+  llm_client.py         # Factory ChatOpenAI dùng chung
+  mcp_client.py          # Kết nối MCP tới backend Java, discover tool lúc khởi động
+  tools.py              # ALL_TOOLS — danh sách tool discover được từ MCP (loại trừ thoigian_*)
+  prompts/              # AGENT_PROMPT (agent.txt) — sửa xong phải restart, xem trên
+  memory.py             # Lưu lịch sử hội thoại theo session_id (in-memory, mất khi restart)
+  schemas/              # Pydantic schema request/response + GraphState
+  utils/time_context.py # Tiêm ngày hiện tại thật vào system message mỗi lần gọi LLM
 ```
 
-## Đổi model cho từng agent
+## Đổi model cho agent
 
-Model được khai trực tiếp trong code (không qua `.env`), để `None` = dùng model mặc định
-(`settings.llm_model` trong `app/config/settings.py`):
+Model khai trực tiếp trong code (không qua `.env`), để `None` = dùng model mặc định
+(`settings.llm_model` trong `app/settings.py`):
 
-- `app/agents/orchestrator/agent.py` → hằng số `ORCHESTRATOR_MODEL`
-- `app/agents/responder/agent.py` → hằng số `RESPONDER_MODEL`
-- `app/agents/base.py` → dict `MODULE_MODELS` (`tiendo`/`nhansu`/`vanhanh`)
+- `app/agent.py` → hằng số `AGENT_MODEL`
 
 Sửa xong nhớ restart (đây là file `.py` nên `--reload` tự nạp lại, không cần Ctrl+C).
 
-## Routing tool theo module
+## Tool MCP
 
-`app/tools/__init__.py` gom tool MCP vào 3 module theo **prefix tên tool**:
-
-| Prefix | Module |
-|---|---|
-| `hopdong_`, `sanluong_` | `tiendo` |
-| `phancong_`, `nguonluc_` | `nhansu` |
-| `tramton_`, `vuongmac_` | `vanhanh` |
-
-Thêm tool mới ở backend Java thì phải đặt tên đúng 1 trong các prefix trên để chatbot tự route đúng
-module — nếu không, cần sửa `_MODULE_PREFIXES` trong file này.
+`app/tools.py` nạp TOÀN BỘ tool discover được từ MCP server vào 1 danh sách phẳng `ALL_TOOLS`
+(loại trừ tool có prefix `thoigian_` — ngày hiện tại được tiêm thẳng vào system message thay vì để
+agent tự gọi tool, xem `app/utils/time_context.py`). Không phân nhóm/route theo prefix tên nữa —
+thêm tool mới ở backend Java không cần sửa gì ở đây, agent tự đọc description của tool để quyết
+định dùng khi nào (xem `app/prompts/agent.txt` mục PHẠM VI NGHIỆP VỤ).

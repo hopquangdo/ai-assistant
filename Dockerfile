@@ -8,6 +8,8 @@ RUN groupadd -r chatbot && useradd -r -g chatbot chatbot \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt ./
+# package/ chứa các lib nội bộ cài dạng -e (dqh-ai-core, dqh-api-core) — phải có trước khi pip install.
+COPY package ./package
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app ./app

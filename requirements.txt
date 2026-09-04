@@ -3,8 +3,15 @@ uvicorn[standard]
 pydantic
 pydantic-settings
 langgraph
+langchain
 langchain-core
 langchain-openai
 langchain-mcp-adapters
 httpx
 streamlit
+
+# Lõi LLM/agent dùng chung (model factory, ReAct runtime, usage tracking, MCP client).
+-e ./package/ai_core[mcp]
+
+# Lõi FastAPI dùng chung (app factory, response envelope, error handler, middleware, SSE).
+-e ./package/api_core

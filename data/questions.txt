@@ -1,0 +1,107 @@
+Hôm nay có gì bất thường không?
+Tuần này làm được bao nhiêu?
+Tuần này có trạm nào xong không?
+Hôm nay có mấy trạm khởi công?
+Khu vực nào đang chậm nhất?
+Hợp đồng nào sắp hết hạn trong 30 ngày tới?
+Đang vướng bao nhiêu ?
+Tuần này vướng nào chưa gỡ được?
+Tháng này so tháng trước thế nào?
+Còn tồn đọng bao nhiêu tiền?
+Ba mảng đang chạy thế nào?
+Có hợp đồng nào mới ký trong tháng này không?
+Hợp đồng HD-2024-015 còn mấy đối tượng chưa xong?
+Hợp đồng HD-2024-015 còn bao nhiêu đối tượng chưa khảo sát?
+Hợp đồng HD-2024-015 đang tắc ở bước nào?
+Hợp đồng HD-2024-015 có trạm (đối tượng) nào tuần này chuyển bước không?
+Trạm(đối tượng) nào khởi công lâu mà không cập nhật?
+Hợp đồng HD-2024-015 có trạm nào thiếu biên bản không?
+Trong hợp đồng HD-2024-015, tỉnh nào chậm nhất?
+Hợp đồng HD-2024-015 có kịp hạn không?
+Hợp đồng HD-2024-015 bao giờ xong?
+So sánh hợp đồng HD-2024-015 và HD-2024-020 với nhau
+Hợp đồng HD-2024-015 có trạm (đối tượng) nào chưa phân công khảo sát không?
+Trạm(đối tượng) nào bị vướng không làm tiếp được?
+Hợp đồng nào chưa ký mà đã làm rồi?
+Hợp đồng HD-2024-015 có trạm (đối tượng) nào bị hủy không, vì sao?
+Anh Vinh đang ôm mấy trạm đang vướng?
+Trạm BTS0123 đang ở bước nào?
+Trạm BTS0123 thuộc hợp đồng nào?
+Trạm BTS0123 ai làm?
+Trạm BTS0123 ở đâu?
+Trạm BTS0123 loại cột gì, cao bao nhiêu?
+Trạm BTS0123 vướng gì?
+Trạm BTS0123 bàn giao mặt bằng chưa?
+Vật tư trạm BTS0123 về chưa?
+Trạm BTS0123 còn thiếu biên bản gì?
+Trạm BTS0123 làm được mấy hạng mục rồi?
+Trạm BTS0123 có ảnh thi công chưa?
+Trạm BTS0123 khảo sát ngày nào?
+Trạm nào đủ điều kiện mà chưa thanh toán?
+Trạm BTS0123 còn thiếu gì để quyết toán?
+Trạm nào tồn lâu nhất?
+Biên bản nào đang chờ duyệt?
+Biên bản nào bị từ chối, vì sao?
+Trạm BTS0123 ai duyệt biên bản?
+Trạm nào xong lâu mà chưa quyết toán?
+Trạm nào thiếu từ 2 điều kiện trở lên?
+Tháng này quyết toán được mấy trạm?
+Hợp đồng HD-2024-015 còn tồn bao nhiêu tiền?
+Khu vực nào quá hạn quyết toán nhiều nhất?
+Hợp đồng HD-2024-015 đã xuất biên bản nào rồi?
+Trạm nào có biên bản mà chưa cập nhật điều kiện?
+Nhà thầu Royal đang làm mấy trạm?
+Nhà thầu nào chậm nhất?
+Nhà thầu nào đang rảnh?
+Trạm nào chưa giao nhà thầu?
+Nhà thầu Royal còn tồn mấy trạm?
+Nhà thầu nào tồn nhiều nhất?
+Nhà thầu Royal làm ở tỉnh nào?
+Nhà thầu Royal ký hợp đồng thầu phụ chưa?
+Trạm BTS0123 trước giao cho ai?
+Nhà thầu nào có trạm đang vướng?
+Trạm nào sản lượng bất thường?
+Hợp đồng nào vượt ngân sách?
+Hợp đồng HD-2024-015 tiêu hết bao nhiêu %?
+Hợp đồng nào thừa, hợp đồng nào thiếu?
+Trong hợp đồng HD-2024-015, trạm nào chênh nhiều nhất?
+Trong hợp đồng HD-2024-015, tỉnh nào thừa, tỉnh nào thiếu?
+Hợp đồng HD-2024-015 bình quân mỗi trạm bao nhiêu tiền?
+Hệ số cảnh báo đang để bao nhiêu?
+Ai điều chỉnh sản lượng trạm BTS0123?
+Hợp đồng nào chưa quyết toán?
+Sao hợp đồng mới tạo đã báo vượt ngưỡng?
+Hôm nay ai báo sản lượng?
+Sản lượng tháng 8/2026 toàn hệ thống bao nhiêu?
+Sản lượng hôm qua bao nhiêu?
+Hợp đồng HD-2024-015 làm được bao nhiêu % rồi?
+Tuần này trạm nào báo nhiều nhất?
+Nhà thầu nào tuần này chưa báo gì?
+Trạm nào khảo sát xong mà chưa nhập sản lượng?
+Trạm BTS0123 còn hạng mục nào chưa làm?
+Trạm BTS0123 báo bao nhiêu tiền rồi?
+Ai sửa sản lượng trạm BTS0123?
+Hạng mục nào bị nghiệm thu không đạt?
+Vướng nào tôi phải xử lý?
+Vướng nào quá 30 ngày rồi?
+Vướng nào sắp tới hạn xử lý?
+Vướng nào gấp mà chưa ai nhận?
+Loại vướng nào nhiều nhất?
+Khu vực nào vướng nhiều nhất?
+Tháng này gỡ được mấy vướng?
+Vướng mắc của trạm BTS0123 xử lý tới đâu rồi?
+Khu vực Nghệ An còn bao nhiêu việc chưa làm?
+Nguồn việc nào sắp hết?
+Nguồn việc trung tâm TTKV2, kế hoạch với thực tế chênh bao nhiêu?
+Trong quý 3/2026, trung tâm nào làm được nhiều nhất?
+Chỗ nào báo sản lượng mà chưa lên doanh thu?
+Nguồn việc nào đang vướng nhiều nhất?
+Tôi đang được giao mấy trạm?
+Trạm nào tôi phải làm tuần này?
+Trạm nào của tôi bị chặn?
+Sản lượng tôi báo duyệt chưa?
+Tháng này tôi báo được bao nhiêu?
+Trạm BTS0123 tôi còn thiếu hồ sơ gì?
+Hạng mục nào của tôi bị đánh không đạt?
+Vật tư trạm BTS0123 về chưa?
+Trạm nào của tôi chưa quyết toán?

@@ -1,0 +1,107 @@
+{"id": 1, "question": "Hôm nay có gì bất thường không?", "expected_tools": ["thoigian_hientai", "system_overview_tool"], "category": "Tổng hợp", "test_type": "multi_tool_chain"}
+{"id": 2, "question": "Tuần này làm được bao nhiêu?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Tổng hợp", "test_type": "multi_tool_chain"}
+{"id": 3, "question": "Tuần này có trạm nào xong không?", "expected_tools": [], "category": "Tổng hợp", "test_type": "refusal"}
+{"id": 4, "question": "Hôm nay có mấy trạm khởi công?", "expected_tools": [], "category": "Tổng hợp", "test_type": "refusal"}
+{"id": 5, "question": "Khu vực nào đang chậm nhất?", "expected_tools": [], "category": "Tổng hợp", "test_type": "refusal"}
+{"id": 6, "question": "Hợp đồng nào sắp hết hạn trong 30 ngày tới?", "expected_tools": [], "category": "Tổng hợp", "test_type": "refusal"}
+{"id": 7, "question": "Đang vướng bao nhiêu ?", "expected_tools": ["vuongmac_tool"], "category": "Tổng hợp", "test_type": "single_tool"}
+{"id": 8, "question": "Tuần này vướng nào chưa gỡ được?", "expected_tools": ["thoigian_hientai", "vuongmac_tool"], "category": "Tổng hợp", "test_type": "multi_tool_chain"}
+{"id": 9, "question": "Tháng này so tháng trước thế nào?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Tổng hợp", "test_type": "multi_tool_chain"}
+{"id": 10, "question": "Còn tồn đọng bao nhiêu tiền?", "expected_tools": ["doituongton_tool"], "category": "Tổng hợp", "test_type": "single_tool"}
+{"id": 11, "question": "Ba mảng đang chạy thế nào?", "expected_tools": ["hopdong_tool"], "category": "Tổng hợp", "test_type": "single_tool"}
+{"id": 12, "question": "Có hợp đồng nào mới ký trong tháng này không?", "expected_tools": ["hopdong_tool"], "category": "Tổng hợp", "test_type": "single_tool"}
+{"id": 13, "question": "Hợp đồng HD-2024-015 còn mấy đối tượng chưa xong?", "expected_tools": ["hopdong_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 14, "question": "Hợp đồng HD-2024-015 còn bao nhiêu đối tượng chưa khảo sát?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 15, "question": "Hợp đồng HD-2024-015 đang tắc ở bước nào?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 16, "question": "Hợp đồng HD-2024-015 có trạm (đối tượng) nào tuần này chuyển bước không?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 17, "question": "Trạm(đối tượng) nào khởi công lâu mà không cập nhật?", "expected_tools": ["doituongton_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 18, "question": "Hợp đồng HD-2024-015 có trạm nào thiếu biên bản không?", "expected_tools": ["bienban_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 19, "question": "Trong hợp đồng HD-2024-015, tỉnh nào chậm nhất?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 20, "question": "Hợp đồng HD-2024-015 có kịp hạn không?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 21, "question": "Hợp đồng HD-2024-015 bao giờ xong?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 22, "question": "So sánh hợp đồng HD-2024-015 và HD-2024-020 với nhau", "expected_tools": ["hopdong_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 23, "question": "Hợp đồng HD-2024-015 có trạm (đối tượng) nào chưa phân công khảo sát không?", "expected_tools": ["phancong_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 24, "question": "Trạm(đối tượng) nào bị vướng không làm tiếp được?", "expected_tools": ["vuongmac_tool", "phancong_tool"], "category": "Theo dõi hợp đồng", "test_type": "multi_tool"}
+{"id": 25, "question": "Hợp đồng nào chưa ký mà đã làm rồi?", "expected_tools": ["nguonviec_tool"], "category": "Theo dõi hợp đồng", "test_type": "single_tool"}
+{"id": 26, "question": "Hợp đồng HD-2024-015 có trạm (đối tượng) nào bị hủy không, vì sao?", "expected_tools": [], "category": "Theo dõi hợp đồng", "test_type": "refusal"}
+{"id": 27, "question": "Anh Vinh đang ôm mấy trạm đang vướng?", "expected_tools": ["phancong_tool", "vuongmac_tool"], "category": "Theo dõi hợp đồng", "test_type": "multi_tool"}
+{"id": 28, "question": "Trạm BTS0123 đang ở bước nào?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 29, "question": "Trạm BTS0123 thuộc hợp đồng nào?", "expected_tools": ["hopdong_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 30, "question": "Trạm BTS0123 ai làm?", "expected_tools": ["phancong_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 31, "question": "Trạm BTS0123 ở đâu?", "expected_tools": ["hopdong_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 32, "question": "Trạm BTS0123 loại cột gì, cao bao nhiêu?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 33, "question": "Trạm BTS0123 vướng gì?", "expected_tools": ["vuongmac_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 34, "question": "Trạm BTS0123 bàn giao mặt bằng chưa?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 35, "question": "Vật tư trạm BTS0123 về chưa?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 36, "question": "Trạm BTS0123 còn thiếu biên bản gì?", "expected_tools": ["bienban_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 37, "question": "Trạm BTS0123 làm được mấy hạng mục rồi?", "expected_tools": ["sanluong_tool"], "category": "Tra cứu tại hiện trường", "test_type": "single_tool"}
+{"id": 38, "question": "Trạm BTS0123 có ảnh thi công chưa?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 39, "question": "Trạm BTS0123 khảo sát ngày nào?", "expected_tools": [], "category": "Tra cứu tại hiện trường", "test_type": "refusal"}
+{"id": 40, "question": "Trạm nào đủ điều kiện mà chưa thanh toán?", "expected_tools": ["doituongton_tool"], "category": "Quyết toán & hồ sơ", "test_type": "single_tool"}
+{"id": 41, "question": "Trạm BTS0123 còn thiếu gì để quyết toán?", "expected_tools": ["doituongton_tool", "bienban_tool"], "category": "Quyết toán & hồ sơ", "test_type": "multi_tool"}
+{"id": 42, "question": "Trạm nào tồn lâu nhất?", "expected_tools": ["doituongton_tool"], "category": "Quyết toán & hồ sơ", "test_type": "single_tool"}
+{"id": 43, "question": "Biên bản nào đang chờ duyệt?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 44, "question": "Biên bản nào bị từ chối, vì sao?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 45, "question": "Trạm BTS0123 ai duyệt biên bản?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 46, "question": "Trạm nào xong lâu mà chưa quyết toán?", "expected_tools": ["doituongton_tool"], "category": "Quyết toán & hồ sơ", "test_type": "single_tool"}
+{"id": 47, "question": "Trạm nào thiếu từ 2 điều kiện trở lên?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 48, "question": "Tháng này quyết toán được mấy trạm?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 49, "question": "Hợp đồng HD-2024-015 còn tồn bao nhiêu tiền?", "expected_tools": ["doituongton_tool"], "category": "Quyết toán & hồ sơ", "test_type": "single_tool"}
+{"id": 50, "question": "Khu vực nào quá hạn quyết toán nhiều nhất?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 51, "question": "Hợp đồng HD-2024-015 đã xuất biên bản nào rồi?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 52, "question": "Trạm nào có biên bản mà chưa cập nhật điều kiện?", "expected_tools": [], "category": "Quyết toán & hồ sơ", "test_type": "refusal"}
+{"id": 53, "question": "Nhà thầu Royal đang làm mấy trạm?", "expected_tools": ["nhathau_tool"], "category": "Theo dõi nhà thầu", "test_type": "single_tool"}
+{"id": 54, "question": "Nhà thầu nào chậm nhất?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 55, "question": "Nhà thầu nào đang rảnh?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 56, "question": "Trạm nào chưa giao nhà thầu?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 57, "question": "Nhà thầu Royal còn tồn mấy trạm?", "expected_tools": ["nhathau_tool"], "category": "Theo dõi nhà thầu", "test_type": "single_tool"}
+{"id": 58, "question": "Nhà thầu nào tồn nhiều nhất?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 59, "question": "Nhà thầu Royal làm ở tỉnh nào?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 60, "question": "Nhà thầu Royal ký hợp đồng thầu phụ chưa?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 61, "question": "Trạm BTS0123 trước giao cho ai?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 62, "question": "Nhà thầu nào có trạm đang vướng?", "expected_tools": [], "category": "Theo dõi nhà thầu", "test_type": "refusal"}
+{"id": 63, "question": "Trạm nào sản lượng bất thường?", "expected_tools": ["doituongton_tool"], "category": "Kiểm soát chi phí", "test_type": "single_tool"}
+{"id": 64, "question": "Hợp đồng nào vượt ngân sách?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 65, "question": "Hợp đồng HD-2024-015 tiêu hết bao nhiêu %?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 66, "question": "Hợp đồng nào thừa, hợp đồng nào thiếu?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 67, "question": "Trong hợp đồng HD-2024-015, trạm nào chênh nhiều nhất?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 68, "question": "Trong hợp đồng HD-2024-015, tỉnh nào thừa, tỉnh nào thiếu?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 69, "question": "Hợp đồng HD-2024-015 bình quân mỗi trạm bao nhiêu tiền?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 70, "question": "Hệ số cảnh báo đang để bao nhiêu?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 71, "question": "Ai điều chỉnh sản lượng trạm BTS0123?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 72, "question": "Hợp đồng nào chưa quyết toán?", "expected_tools": ["doituongton_tool"], "category": "Kiểm soát chi phí", "test_type": "single_tool"}
+{"id": 73, "question": "Sao hợp đồng mới tạo đã báo vượt ngưỡng?", "expected_tools": [], "category": "Kiểm soát chi phí", "test_type": "refusal"}
+{"id": 74, "question": "Hôm nay ai báo sản lượng?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "multi_tool_chain"}
+{"id": 75, "question": "Sản lượng tháng 8/2026 toàn hệ thống bao nhiêu?", "expected_tools": ["sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "single_tool"}
+{"id": 76, "question": "Sản lượng hôm qua bao nhiêu?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "multi_tool_chain"}
+{"id": 77, "question": "Hợp đồng HD-2024-015 làm được bao nhiêu % rồi?", "expected_tools": ["sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "single_tool"}
+{"id": 78, "question": "Tuần này trạm nào báo nhiều nhất?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "multi_tool_chain"}
+{"id": 79, "question": "Nhà thầu nào tuần này chưa báo gì?", "expected_tools": [], "category": "Sản lượng hằng ngày", "test_type": "refusal"}
+{"id": 80, "question": "Trạm nào khảo sát xong mà chưa nhập sản lượng?", "expected_tools": [], "category": "Sản lượng hằng ngày", "test_type": "refusal"}
+{"id": 81, "question": "Trạm BTS0123 còn hạng mục nào chưa làm?", "expected_tools": ["sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "single_tool"}
+{"id": 82, "question": "Trạm BTS0123 báo bao nhiêu tiền rồi?", "expected_tools": ["sanluong_tool"], "category": "Sản lượng hằng ngày", "test_type": "single_tool"}
+{"id": 83, "question": "Ai sửa sản lượng trạm BTS0123?", "expected_tools": [], "category": "Sản lượng hằng ngày", "test_type": "refusal"}
+{"id": 84, "question": "Hạng mục nào bị nghiệm thu không đạt?", "expected_tools": [], "category": "Sản lượng hằng ngày", "test_type": "refusal"}
+{"id": 85, "question": "Vướng nào tôi phải xử lý?", "expected_tools": ["vuongmac_tool"], "category": "Vướng mắc & xử lý", "test_type": "single_tool"}
+{"id": 86, "question": "Vướng nào quá 30 ngày rồi?", "expected_tools": ["vuongmac_tool"], "category": "Vướng mắc & xử lý", "test_type": "single_tool"}
+{"id": 87, "question": "Vướng nào sắp tới hạn xử lý?", "expected_tools": [], "category": "Vướng mắc & xử lý", "test_type": "refusal"}
+{"id": 88, "question": "Vướng nào gấp mà chưa ai nhận?", "expected_tools": [], "category": "Vướng mắc & xử lý", "test_type": "refusal"}
+{"id": 89, "question": "Loại vướng nào nhiều nhất?", "expected_tools": ["vuongmac_tool"], "category": "Vướng mắc & xử lý", "test_type": "single_tool"}
+{"id": 90, "question": "Khu vực nào vướng nhiều nhất?", "expected_tools": [], "category": "Vướng mắc & xử lý", "test_type": "refusal"}
+{"id": 91, "question": "Tháng này gỡ được mấy vướng?", "expected_tools": [], "category": "Vướng mắc & xử lý", "test_type": "refusal"}
+{"id": 92, "question": "Vướng mắc của trạm BTS0123 xử lý tới đâu rồi?", "expected_tools": ["vuongmac_tool"], "category": "Vướng mắc & xử lý", "test_type": "single_tool"}
+{"id": 93, "question": "Khu vực Nghệ An còn bao nhiêu việc chưa làm?", "expected_tools": ["nguonviec_tool"], "category": "Nguồn việc & kế hoạch", "test_type": "single_tool"}
+{"id": 94, "question": "Nguồn việc nào sắp hết?", "expected_tools": [], "category": "Nguồn việc & kế hoạch", "test_type": "refusal"}
+{"id": 95, "question": "Nguồn việc trung tâm TTKV2, kế hoạch với thực tế chênh bao nhiêu?", "expected_tools": [], "category": "Nguồn việc & kế hoạch", "test_type": "refusal"}
+{"id": 96, "question": "Trong quý 3/2026, trung tâm nào làm được nhiều nhất?", "expected_tools": [], "category": "Nguồn việc & kế hoạch", "test_type": "refusal"}
+{"id": 97, "question": "Chỗ nào báo sản lượng mà chưa lên doanh thu?", "expected_tools": ["nguonviec_tool"], "category": "Nguồn việc & kế hoạch", "test_type": "single_tool"}
+{"id": 98, "question": "Nguồn việc nào đang vướng nhiều nhất?", "expected_tools": ["nguonviec_tool"], "category": "Nguồn việc & kế hoạch", "test_type": "single_tool"}
+{"id": 99, "question": "Tôi đang được giao mấy trạm?", "expected_tools": ["phancong_tool"], "category": "Nhà thầu tự tra", "test_type": "single_tool"}
+{"id": 100, "question": "Trạm nào tôi phải làm tuần này?", "expected_tools": [], "category": "Nhà thầu tự tra", "test_type": "refusal"}
+{"id": 101, "question": "Trạm nào của tôi bị chặn?", "expected_tools": ["vuongmac_tool", "phancong_tool"], "category": "Nhà thầu tự tra", "test_type": "multi_tool"}
+{"id": 102, "question": "Sản lượng tôi báo duyệt chưa?", "expected_tools": ["sanluong_tool"], "category": "Nhà thầu tự tra", "test_type": "single_tool"}
+{"id": 103, "question": "Tháng này tôi báo được bao nhiêu?", "expected_tools": ["thoigian_hientai", "sanluong_tool"], "category": "Nhà thầu tự tra", "test_type": "multi_tool_chain"}
+{"id": 104, "question": "Trạm BTS0123 tôi còn thiếu hồ sơ gì?", "expected_tools": ["bienban_tool"], "category": "Nhà thầu tự tra", "test_type": "single_tool"}
+{"id": 105, "question": "Hạng mục nào của tôi bị đánh không đạt?", "expected_tools": [], "category": "Nhà thầu tự tra", "test_type": "refusal"}
+{"id": 106, "question": "Vật tư trạm BTS0123 về chưa?", "expected_tools": [], "category": "Nhà thầu tự tra", "test_type": "refusal"}
+{"id": 107, "question": "Trạm nào của tôi chưa quyết toán?", "expected_tools": ["doituongton_tool"], "category": "Nhà thầu tự tra", "test_type": "single_tool"}

@@ -4,11 +4,13 @@ from contextlib import asynccontextmanager
 import logging
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import router
+from dqh.api_core import create_app
+
+from app.agent import warmup_agent
+from app.routes import router
 from app.logging import configure_logging
-from app.mcp.client import load_all_tools
+from app.mcp_client import load_all_tools
 from app.tools import ALL_TOOLS, set_tools
 
 configure_logging()
@@ -24,35 +26,33 @@ async def lifespan(app: FastAPI):
         logger.info(f"mcp tools loaded: count={len(ALL_TOOLS)} names={sorted(t.name for t in ALL_TOOLS)}")
     except Exception:
         logger.exception("failed to load mcp tools at startup")
+    # Nạp sẵn model + graph + mở connection pool tới LLM để request đầu tiên không dính cold start.
+    await warmup_agent()
     yield
 
 
-app = FastAPI(title="Contract Chatbot", lifespan=lifespan)
-
+# create_app (dqh.api_core) lo sẵn: middleware request-id / timing / access-log,
+# exception handler trả về envelope ApiResponse, và endpoint /health không version hoá
+# (alias cho Docker HEALTHCHECK / LB / k8s).
+#
 # Frontend gọi thẳng chatbot (bỏ qua Next.js rewrite proxy) cho endpoint streaming —
 # rewrite proxy của Next.js dev server buffer response, phá luồng SSE thời gian thực.
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_methods=["POST", "GET"],
-    allow_headers=["Content-Type"],
+#
+# Prefix /api/v1 khớp quy ước versioning của backend (mọi controller Spring đều /api/v1/...)
+# — nginx route /api/v1/chat[/stream] thẳng vào chatbot mà không cần strip/rewrite path.
+app = create_app(
+    title="Contract Chatbot",
+    lifespan=lifespan,
+    cors_origins=["http://localhost:3000"],
+    routers=[router],
+    router_prefix="/api/v1",
 )
-
-# Khớp quy ước versioning của backend (mọi controller Spring đều /api/v1/...) — nginx route
-# /api/v1/chat[/stream] thẳng vào chatbot mà không cần strip/rewrite path.
-app.include_router(router, prefix="/api/v1")
-
-
-@app.get("/health")
-def health_root() -> dict[str, str]:
-    """Alias không version hoá — dùng cho Docker HEALTHCHECK/health check hạ tầng (LB, k8s...)."""
-    return {"status": "ok"}
 
 
 if __name__ == "__main__":
     import uvicorn
 
-    from app.config.settings import get_settings
+    from app.settings import get_settings
 
     settings = get_settings()
     uvicorn.run("app.main:app", host=settings.app_host, port=settings.app_port, reload=True)
