@@ -14,7 +14,7 @@ from dqh.ai_core import (
     ToolStartEvent,
     stream_agent,
 )
-from dqh.api_core import SSEResponse, sse as _sse
+from dqh.svc_core.http.adapters.fastapi import SSEResponse, sse as _sse
 
 from app.agent import (
     AGENT_RECURSION_LIMIT,
@@ -147,6 +147,6 @@ async def chat_stream(request: ChatRequest) -> SSEResponse:
         if suggestions:
             yield _sse("suggestions", {"suggestions": suggestions})
 
-    # SSEResponse (dqh.api_core) đã set sẵn header chặn buffer ở reverse proxy
+    # SSEResponse (dqh.svc_core) đã set sẵn header chặn buffer ở reverse proxy
     # (Cache-Control: no-cache, X-Accel-Buffering: no, Connection: keep-alive).
     return SSEResponse(event_generator())

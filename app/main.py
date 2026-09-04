@@ -5,7 +5,7 @@ import logging
 
 from fastapi import FastAPI
 
-from dqh.api_core import create_app
+from dqh.svc_core.http.adapters.fastapi import create_app
 
 from app.agent import warmup_agent
 from app.routes import router
@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
     yield
 
 
-# create_app (dqh.api_core) lo sẵn: middleware request-id / timing / access-log,
+# create_app (dqh.svc_core) lo sẵn: middleware request-id / timing / access-log,
 # exception handler trả về envelope ApiResponse, và endpoint /health không version hoá
 # (alias cho Docker HEALTHCHECK / LB / k8s).
 #

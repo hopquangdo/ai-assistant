@@ -2,7 +2,7 @@
 
 import logging
 
-from dqh.api_core import DEFAULT_FORMAT, install_request_id_log_filter
+from dqh.svc_core.logging import DEFAULT_FORMAT, install_request_id_log_filter
 
 from app.settings import get_settings
 
@@ -10,7 +10,7 @@ from app.settings import get_settings
 def configure_logging() -> None:
     """Khởi tạo cấu hình logging cho ứng dụng.
 
-    Dùng format của dqh.api_core (có ``[%(request_id)s]``) và gắn filter bơm
+    Dùng format của dqh.svc_core (có ``[%(request_id)s]``) và gắn filter bơm
     request_id từ ContextVar vào MỌI log record (kể cả dqh.ai_core, uvicorn…),
     nhờ đó mọi dòng log trong 1 request đều có cùng correlation id."""
     settings = get_settings()
