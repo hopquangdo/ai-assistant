@@ -160,9 +160,11 @@ jobs:
               exit 1
             fi
 
-            if [ -n "${GHCR_TOKEN:-}" ]; then
-              echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-${{ github.actor }}}" --password-stdin
+            if [ -z "${GHCR_TOKEN:-}" ]; then
+              echo "Missing GHCR_PULL_TOKEN secret: cannot login to ghcr.io"
+              exit 1
             fi
+            echo "$GHCR_TOKEN" | docker login ghcr.io -u "${GHCR_USERNAME:-${{ github.actor }}}" --password-stdin
 
             COMPOSE=(docker compose -p "$PROJECT" --env-file "$ENV_FILE" -f "$COMPOSE_FILE")
 
