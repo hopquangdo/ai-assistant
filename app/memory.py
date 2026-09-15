@@ -7,8 +7,6 @@ from typing import Any
 
 from langchain_core.messages import AIMessage, ToolMessage
 
-from app.schemas.graph import GraphState
-
 
 def sanitize_tool_call_history(messages: list) -> list:
     """Loại bỏ mọi AIMessage(tool_calls=...) không có đủ ToolMessage phản hồi đi kèm ngay sau nó.

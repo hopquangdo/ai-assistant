@@ -14,10 +14,11 @@ from dqh.ai_core import (
     ToolStartEvent,
     stream_agent,
 )
-from dqh.svc_core.http.adapters.fastapi import SSEResponse, sse as _sse
+from dqh.svc_core.transports.sse import SSEResponse, sse as _sse
 
 from app.agent import (
     AGENT_RECURSION_LIMIT,
+    AVAILABLE_MODELS,
     RECURSION_LIMIT_FALLBACK_TEXT,
     build_input_messages,
     get_agent,
@@ -50,6 +51,20 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@router.get("/models")
+def list_models() -> dict[str, object]:
+    """Danh sách model client được chọn (dropdown ở frontend)."""
+    return {"models": AVAILABLE_MODELS, "default": AVAILABLE_MODELS[0]}
+
+
+def _validate_model(model: str | None) -> str | None:
+    """Chặn model lạ (không có trong AVAILABLE_MODELS) — tránh client tự ý truyền chuỗi bất kỳ
+    xuống init_chat_model (có thể trỏ sang provider khác nếu chứa dấu ":")."""
+    if model is not None and model not in AVAILABLE_MODELS:
+        raise HTTPException(status_code=400, detail=f"Model không hợp lệ: {model}")
+    return model
+
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest) -> ChatResponse:
     """Nhận tin nhắn từ client, giữ memory phiên và trả về câu trả lời."""
@@ -60,8 +75,9 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     logger.info("chat request", extra={"session_id": session_id, "user_message": request.message})
 
+    model = _validate_model(request.model)
     try:
-        new_messages = await run_agent(messages)
+        new_messages = await run_agent(messages, model=model)
     except Exception:
         logger.exception("chat failed", extra={"session_id": session_id})
         raise HTTPException(status_code=500, detail="Đã có lỗi xảy ra, vui lòng thử lại.")
@@ -85,6 +101,7 @@ async def chat_stream(request: ChatRequest) -> SSEResponse:
     phải tool-call) chỉ xuất hiện ở lượt trả lời cuối cùng của node "agent", nên stream thẳng mọi
     on_chat_model_stream của node đó là an toàn (xem app/agents/base.py).
     """
+    model = _validate_model(request.model)
     session_id = request.session_id or str(uuid.uuid4())
     session_memory = memory_manager.get(session_id)
     history = sanitize_tool_call_history(session_memory.get("messages", []))
@@ -93,9 +110,9 @@ async def chat_stream(request: ChatRequest) -> SSEResponse:
     logger.info("chat stream request", extra={"session_id": session_id, "user_message": request.message})
 
     async def event_generator():
-        graph = get_agent().graph
+        graph = get_agent(model).graph
         input_messages = build_input_messages(messages)
-        _usage, tracker = new_usage_tracker()
+        _usage, tracker = new_usage_tracker(model)
         # DoneEvent.messages là nguồn chính; MessageEvent tích luỹ dự phòng nếu stream đứt sớm.
         new_messages: list = []
         final_content = ""
@@ -140,6 +157,7 @@ async def chat_stream(request: ChatRequest) -> SSEResponse:
             memory_manager.update(session_id, {"messages": messages + new_messages})
 
         logger.info("chat stream response", extra={"session_id": session_id, "reply": final_content})
+        yield _sse("usage", _usage.to_dict())
         yield _sse("done", {"reply": final_content, "session_id": session_id})
 
         # Gợi ý câu hỏi tiếp theo — tính SAU khi đã phát "done" để không trì hoãn câu trả lời.

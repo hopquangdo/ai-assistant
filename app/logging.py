@@ -2,7 +2,7 @@
 
 import logging
 
-from dqh.svc_core.logging import DEFAULT_FORMAT, install_request_id_log_filter
+from dqh.svc_core.middleware.logging import DEFAULT_FORMAT, install_request_id_log_filter
 
 from app.settings import get_settings
 
