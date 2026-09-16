@@ -66,14 +66,21 @@ class CaseResult:
 
 
 def call_chat_stream(base_url: str, question: str, timeout: float) -> tuple[list[str], float]:
-    """Gọi /api/v1/chat/stream, trả về (danh sách tool đã gọi theo thứ tự, latency ms)."""
+    """Tạo stream bằng POST rồi GET SSE, trả về tool đã gọi và latency."""
     session_id = str(uuid.uuid4())
     start = time.perf_counter()
     tools_called: list[str] = []
 
-    with requests.post(
+    create_resp = requests.post(
         f"{base_url}/api/v1/chat/stream",
         json={"message": question, "session_id": session_id},
+        timeout=timeout,
+    )
+    create_resp.raise_for_status()
+    stream_id = create_resp.json()["stream_id"]
+
+    with requests.get(
+        f"{base_url}/api/v1/chat/stream/{stream_id}",
         stream=True,
         timeout=timeout,
     ) as resp:

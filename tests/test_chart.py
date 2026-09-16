@@ -1,0 +1,56 @@
+import pytest
+from pydantic import ValidationError
+
+from app.agents.nodes.react.prompt import SELECT_PROMPT
+from app.agents.nodes.genchart.prompt import CHART_PROMPT
+from app.schemas.chart import ChartDecision, ChartSeries, ChartSpec
+from app.utils.text import load_prompt
+
+
+def valid_spec(**overrides):
+    values = {
+        "chart_type": "bar",
+        "title": "So sanh",
+        "categories": ["A", "B"],
+        "series": [{"name": "Gia tri", "data": [1, 2]}],
+    }
+    values.update(overrides)
+    return ChartSpec(**values)
+
+
+def test_chart_spec_accepts_valid_shape():
+    spec = valid_spec()
+    assert spec.series[0].data == [1.0, 2.0]
+
+
+def test_chart_spec_rejects_mismatched_series_length():
+    with pytest.raises(ValidationError, match="diem du lieu"):
+        valid_spec(series=[ChartSeries(name="Gia tri", data=[1])])
+
+
+def test_chart_spec_rejects_multiple_pie_series():
+    with pytest.raises(ValidationError, match="pie/donut"):
+        valid_spec(
+            chart_type="pie",
+            series=[
+                {"name": "A", "data": [1, 2]},
+                {"name": "B", "data": [3, 4]},
+            ],
+        )
+
+
+def test_chart_spec_rejects_too_many_categories():
+    with pytest.raises(ValidationError):
+        valid_spec(categories=[str(i) for i in range(13)], series=[{"name": "S", "data": list(range(13))}])
+
+
+def test_chart_decision_without_chart_is_valid():
+    decision = ChartDecision(has_chart=False)
+    assert decision.chart is None
+
+
+def test_load_prompt_prefers_markdown():
+    assert load_prompt("select") == SELECT_PROMPT
+    assert load_prompt("chart") == CHART_PROMPT
+
+

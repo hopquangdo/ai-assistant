@@ -45,29 +45,31 @@ Endpoint stream (SSE, dùng cho frontend hiển thị theo token):
 
 ```
 POST /chat/stream
+GET /chat/stream/{stream_id}
 ```
+
+POST trả về `stream_id` và `session_id`; client dùng `stream_id` để mở kết nối SSE bằng GET.
 
 Bộ câu hỏi mẫu để test thủ công: `tests/sample_questions.csv` (danh sách câu hỏi) và
 `tests/bo_cau_hoi_mau_va_tool.xlsx` (đầy đủ câu hỏi + tool tương ứng + trạng thái đã làm/chưa làm).
 
 ## Cấu trúc chính
 
-Kiến trúc: **1 agent ReAct duy nhất** (`langgraph.prebuilt.create_react_agent`), không
-orchestrator/router/responder riêng — agent tự chọn tool MCP, tự gọi, tự viết câu trả lời cuối
-trong cùng 1 vòng lặp. Các gói con trước đây chỉ có đúng 1 file `.py` đã được gộp phẳng vào thẳng
-`app/` cho gọn (không còn `agents/`, `api/`, `config/`, `llm/`, `mcp/`, `tools/` dạng package).
+Kiến trúc graph gồm ba node: `react` chọn và gọi tool MCP, `response` viết câu trả lời cuối, và
+`genchart` đóng gói số liệu thành chart có schema Pydantic. Orchestrator dịch event graph sang SSE;
+chart được phát sau `done` và không làm hỏng câu trả lời nếu bước sinh chart lỗi.
 
-```
-app/
-  main.py              # FastAPI app, nạp tool MCP lúc khởi động
-  routes.py            # /health, /chat, /chat/stream (stream trực tiếp từ agent, không qua graph bọc ngoài)
-  agent.py             # Agent ReAct duy nhất: get_agent()/run_agent(), guard recursion_limit, log tool call + token/cost
-  settings.py          # Cấu hình đọc từ .env (pydantic-settings)
-  llm_client.py         # Factory ChatOpenAI dùng chung
-  mcp_client.py          # Kết nối MCP tới backend Java, discover tool lúc khởi động
-  tools.py              # ALL_TOOLS — danh sách tool discover được từ MCP (loại trừ thoigian_*)
-  prompts/              # AGENT_PROMPT (agent.txt) — sửa xong phải restart, xem trên
-  memory.py             # Lưu lịch sử hội thoại theo session_id (in-memory, mất khi restart)
+  main.py                         # FastAPI app, nạp tool MCP lúc khởi động
+  agents/graph.py                 # ChatGraph: react -> response -> genchart
+  agents/orchestrator.py          # Dịch graph events thành token/tool/chart/SSE events
+  agents/nodes/                    # Mỗi node một class, implement contract Node
+  agents/prompts/*.md              # Prompt Markdown, nạp bằng load_prompt()
+  api/routes/chat.py              # /chat và /chat/stream
+  schemas/chart.py                # Contract chart dùng chung với frontend
+  services/chat_service.py        # Memory turn và follow-up
+  tools/registry.py               # ALL_TOOLS discover từ MCP
+  core/config.py, llm/client.py   # Cấu hình và factory model
+  utils/time_context.py           # Tiêm ngày hiện tại vào system context
   schemas/              # Pydantic schema request/response + GraphState
   utils/time_context.py # Tiêm ngày hiện tại thật vào system message mỗi lần gọi LLM
 ```
