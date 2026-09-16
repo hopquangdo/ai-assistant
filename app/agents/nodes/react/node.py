@@ -6,8 +6,8 @@ from langgraph.errors import GraphRecursionError
 from app.agents.nodes.node_base import Node
 from app.agents.nodes.react.prompt import SELECT_PROMPT
 from app.agents.nodes.react.schema import ToolCall
-from app.core.constants import AGENT_MODEL, AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT
-from app.llm.client import get_chat_model
+from app.core.constants import AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT
+from app.llm.client import get_chat_model, resolve_node_model
 
 
 class ReActNode(Node):
@@ -17,11 +17,14 @@ class ReActNode(Node):
         self._tools = tools
         self._tools_by_name = {tool.name: tool for tool in tools}
         self._models: dict[str | None, Runnable] = {}
+    name = "react"
+    default_model = "gpt-5.6-luna"
 
     def _model_for(self, model: str | None) -> Runnable:
-        if model not in self._models:
-            self._models[model] = get_chat_model(model or AGENT_MODEL).bind_tools(self._tools)
-        return self._models[model]
+        resolved_model = resolve_node_model(model, self.default_model)
+        if resolved_model not in self._models:
+            self._models[resolved_model] = get_chat_model(resolved_model).bind_tools(self._tools)
+        return self._models[resolved_model]
 
     async def _call_tool(self, call: ToolCall, config: RunnableConfig) -> ToolMessage:
         tool = self._tools_by_name[call["name"]]

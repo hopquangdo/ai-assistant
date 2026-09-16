@@ -5,9 +5,8 @@ from langchain_core.utils.function_calling import convert_to_openai_tool
 from app.agents.nodes.node_base import Node
 from app.agents.nodes.response.prompt import RESPONSE_PROMPT
 from app.agents.nodes.response.schema import ResponseOutput
-from app.core.constants import AGENT_MODEL
 from app.core.messages import strip_trailing_placeholder
-from app.llm.client import get_chat_model
+from app.llm.client import get_chat_model, resolve_node_model
 from app.schemas.stream import StreamEvent, StreamEventName
 from app.shared import dispatch_custom_event
 
@@ -27,13 +26,16 @@ class ResponseNode(Node):
 
     def __init__(self):
         self._models = {}
+    name = "response"
+    default_model = "gpt-5.4-mini"
 
     def _model_for(self, model: str | None):
-        if model not in self._models:
-            self._models[model] = get_chat_model(model or AGENT_MODEL).with_structured_output(
+        resolved_model = resolve_node_model(model, self.default_model)
+        if resolved_model not in self._models:
+            self._models[resolved_model] = get_chat_model(resolved_model).with_structured_output(
                 _RESPONSE_SCHEMA
             )
-        return self._models[model]
+        return self._models[resolved_model]
 
     async def __call__(self, state: dict, config: RunnableConfig) -> dict:
         model = (config.get("configurable") or {}).get("model")

@@ -4,6 +4,14 @@ from langchain_core.language_models import BaseChatModel
 
 from dqh.ai_core import get_chat_model as _ai_core_get_chat_model
 from app.core.config import get_settings
+from app.core.constants import AGENT_MODEL, AUTO_MODEL
+
+
+def resolve_node_model(model_override: str | None, node_default: str | None) -> str | None:
+    """Chọn model override chung hoặc model mặc định riêng của node khi ở chế độ auto."""
+    if model_override and model_override != AUTO_MODEL:
+        return model_override
+    return node_default or AGENT_MODEL
 
 
 @lru_cache

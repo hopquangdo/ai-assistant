@@ -20,7 +20,7 @@ from app.core.logging import get_logger
 from app.memory.service import memory_manager, sanitize_tool_call_history
 from app.schemas.stream import StreamEvent, StreamEventName
 
-__all__ = ["ChatService", "chat_service", "build_messages", "consume_stream", "create_stream", "persist_turn", "produce_chat_stream"]
+__all__ = ["ChatService", "chat_service"]
 
 logger = get_logger("services.chat")
 
@@ -71,7 +71,12 @@ class ChatService:
             await queue.put(None)
 
     async def _run_chat_stream(self, publish, session_id: str, messages: list, model: str | None) -> None:
-        logger.info("chat stream request", extra={"session_id": session_id, "user_message": messages[-1]})
+        logger.info(
+            "chat stream request session_id=%s message_count=%d last_message_type=%s",
+            session_id,
+            len(messages),
+            type(messages[-1]).__name__ if messages else "none",
+        )
 
         new_messages: list = []
         final_content = ""
@@ -119,7 +124,13 @@ class ChatService:
         final_content = final_content or "Xin lỗi, tôi chưa có câu trả lời."
         self.persist_turn(session_id, messages, new_messages, charts)
 
-        logger.info("chat stream response", extra={"session_id": session_id, "reply": final_content})
+        logger.info(
+            "chat stream response session_id=%s reply_length=%d message_count=%d chart_count=%d",
+            session_id,
+            len(final_content),
+            len(new_messages),
+            len(charts),
+        )
         await publish(StreamEvent(name="done", payload={"reply": final_content, "session_id": session_id}))
         await publish(StreamEvent(name="usage", payload=usage))
         for chart in charts:
@@ -127,10 +138,4 @@ class ChatService:
 
 
 chat_service = ChatService()
-
-build_messages = chat_service.build_messages
-persist_turn = chat_service.persist_turn
-create_stream = chat_service.create_stream
-consume_stream = chat_service.consume_stream
-produce_chat_stream = chat_service.produce_chat_stream
 

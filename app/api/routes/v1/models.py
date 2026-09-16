@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter
 
-from app.core.constants import AVAILABLE_MODELS
+from app.core.constants import AVAILABLE_MODELS, AUTO_MODEL
 
 router = APIRouter(prefix="/models", tags=["models"])
 
@@ -10,4 +10,4 @@ router = APIRouter(prefix="/models", tags=["models"])
 @router.get("")
 def list_models() -> dict[str, object]:
     """Danh sách model client được chọn (dropdown ở frontend)."""
-    return {"models": AVAILABLE_MODELS, "default": AVAILABLE_MODELS[0]}
+    return {"models": AVAILABLE_MODELS, "default": AUTO_MODEL}

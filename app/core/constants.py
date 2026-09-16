@@ -4,11 +4,15 @@ trong code, không phải config runtime."""
 # Model mặc định khi client không chọn — None nghĩa là dùng settings.llm_model_name.
 AGENT_MODEL: str | None = None
 
+# Giá trị đặc biệt: mỗi node tự dùng model mặc định riêng.
+AUTO_MODEL = "auto"
+
 # Model cho phép chọn ở frontend (dropdown) — giới hạn model OpenAI đã có giá trong
 # model_prices.json (xem package/ai_core/data/model_prices.json) vì backend hiện gọi thẳng
 # OpenAI (LLM_BASE_URL rỗng, xem app/llm/client.py). Thêm model khác vào đây CHỈ SAU KHI đã có
 # base_url/API key phù hợp cho model đó.
 AVAILABLE_MODELS: list[str] = [
+    AUTO_MODEL,
     "gpt-5.6-luna",
     "gpt-5.4-mini",
     "gpt-5.4-nano",

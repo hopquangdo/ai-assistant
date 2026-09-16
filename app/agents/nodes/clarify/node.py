@@ -1,0 +1,113 @@
+from langchain_core.messages import AIMessage, SystemMessage
+from langchain_core.runnables import Runnable, RunnableConfig
+from langchain_core.utils.function_calling import convert_to_openai_tool
+
+from app.agents.nodes.clarify.prompt import CLARIFY_PROMPT
+from app.agents.nodes.clarify.schema import ClarifyDecision
+from app.agents.nodes.node_base import Node
+from app.llm.client import get_chat_model, resolve_node_model
+from app.schemas.stream import StreamEvent, StreamEventName
+from app.shared import dispatch_custom_event
+
+_CLARIFY_SCHEMA = convert_to_openai_tool(ClarifyDecision)["function"]
+
+
+class ClarifyNode(Node):
+    """Kiểm tra tham số bắt buộc trước khi ReAct gọi tool."""
+
+    name = "clarify"
+    default_model = "gpt-4o-mini"
+
+    def __init__(self, tools: list):
+        self._tool_catalog = "\n\n".join(
+            f"- {tool.name}: {tool.description}" for tool in tools
+        )
+        self._default_model_name = resolve_node_model("auto", self.default_model)
+        self._models: dict[str | None, Runnable] = {
+            self._default_model_name: self._build_model(self._default_model_name),
+        }
+
+    @staticmethod
+    def _build_model(model_name: str | None) -> Runnable:
+        return get_chat_model(model_name).with_structured_output(_CLARIFY_SCHEMA)
+
+    def _model_for(self, requested_model: str | None) -> Runnable:
+        resolved_model = resolve_node_model(requested_model, self.default_model)
+        if resolved_model not in self._models:
+            self._models[resolved_model] = self._build_model(resolved_model)
+        return self._models[resolved_model]
+
+    async def __call__(self, state: dict, config: RunnableConfig) -> dict:
+        requested_model = (config.get("configurable") or {}).get("model")
+        model = self._model_for(requested_model)
+        messages = [
+            SystemMessage(content=CLARIFY_PROMPT),
+            SystemMessage(content=f"Danh mục tool hiện có:\n{self._tool_catalog}"),
+            *state["messages"],
+        ]
+        partial: dict = {}
+        streamed_reply = ""
+        response_started = False
+        async for chunk in model.astream(messages, config=config):
+            chunk_data = chunk.model_dump() if isinstance(chunk, ClarifyDecision) else chunk
+            if not isinstance(chunk_data, dict):
+                continue
+            partial.update({key: value for key, value in chunk_data.items() if value is not None})
+            reply_so_far = str(partial.get("reply") or "")
+            if len(reply_so_far) > len(streamed_reply):
+                if not response_started:
+                    await dispatch_custom_event(
+                        StreamEvent(name=StreamEventName.RESPONSE_START, payload={}),
+                        config,
+                    )
+                    response_started = True
+                delta = reply_so_far[len(streamed_reply):]
+                streamed_reply = reply_so_far
+                await dispatch_custom_event(
+                    StreamEvent(name=StreamEventName.RESPONSE_DELTA, payload={"content": delta}),
+                    config,
+                )
+
+        raw_decision = partial
+        decision = (
+            ClarifyDecision.model_validate(raw_decision)
+            if isinstance(raw_decision, dict)
+            else raw_decision
+        )
+        if decision.needs_clarification:
+            reply = decision.reply.strip() or "Anh/chị vui lòng bổ sung thông tin cần thiết để tôi tra cứu chính xác."
+            await self._complete_stream(reply, response_started, config)
+            return {
+                "messages": [AIMessage(content=reply)],
+                "clarification_needed": True,
+                "needs_react": False,
+            }
+
+        if not decision.needs_react:
+            reply = decision.reply.strip() or "Chào anh/chị! Tôi có thể hỗ trợ tra cứu thông tin nghiệp vụ."
+            await self._complete_stream(reply, response_started, config)
+            return {
+                "messages": [AIMessage(content=reply)],
+                "clarification_needed": False,
+                "needs_react": False,
+            }
+
+        return {
+            "clarification_needed": False,
+            "needs_react": True,
+        }
+
+    @staticmethod
+    async def _complete_stream(text: str, response_started: bool, config: RunnableConfig) -> None:
+        if not response_started:
+            await dispatch_custom_event(
+                StreamEvent(name=StreamEventName.RESPONSE_START, payload={}),
+                config,
+            )
+        await dispatch_custom_event(
+            StreamEvent(
+                name=StreamEventName.RESPONSE_COMPLETED,
+                payload={"answer": text, "should_generate_chart": False},
+            ),
+            config,
+        )

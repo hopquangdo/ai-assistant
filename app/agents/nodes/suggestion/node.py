@@ -9,13 +9,15 @@ from app.agents.nodes.node_base import Node
 from app.agents.nodes.suggestion.prompt import SUGGESTION_PROMPT
 from app.agents.nodes.suggestion.schema import Suggestion
 from app.core.config import get_settings
-from app.core.constants import AGENT_MODEL
-from app.llm.client import get_chat_model
+from app.llm.client import get_chat_model, resolve_node_model
 
 logger = logging.getLogger("chatbot.agent.suggestion")
 
 
 class SuggestionNode(Node):
+    name = "suggestion"
+    default_model = "gpt-5-nano"
+
     def _context(self, history: list) -> list:
         out: list = []
         for message in history:
@@ -30,9 +32,10 @@ class SuggestionNode(Node):
     async def __call__(self, state: dict, config: RunnableConfig) -> dict:
         messages = state.get("messages", [])
         reply = str(getattr(messages[-1], "content", "") or "") if messages else ""
-        if not get_settings().enable_followups or not reply.strip():
+        if not get_settings().enable_followups or not reply.strip() or not state.get("needs_react", True):
             return {"suggestions": []}
-        model_name = (config.get("configurable") or {}).get("model") or AGENT_MODEL
+        requested_model = (config.get("configurable") or {}).get("model")
+        model_name = resolve_node_model(requested_model, self.default_model)
         try:
             extract_kwargs = {
                 "prompt": f"Câu trả lời vừa rồi:\n{reply[:3000]}\n\nGợi ý 3 câu hỏi tiếp theo.",
@@ -44,7 +47,10 @@ class SuggestionNode(Node):
             }
             if "config" in inspect.signature(extract).parameters:
                 extract_kwargs["config"] = config
-            model = get_chat_model(model_name).bind(max_tokens=250)
+            model_options = {"max_tokens": 250}
+            if model_name.lower().startswith("gpt-5") and "chat" not in model_name.lower():
+                model_options = {"max_completion_tokens": 250}
+            model = get_chat_model(model_name).bind(**model_options)
             try:
                 items = await extract(model, **extract_kwargs)
             except TypeError as exc:

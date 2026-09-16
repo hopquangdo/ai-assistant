@@ -6,8 +6,7 @@ from langchain_core.runnables import RunnableConfig
 from app.agents.nodes.genchart.prompt import CHART_PROMPT
 from app.agents.nodes.genchart.schema import ChartDecision, ChartPayload
 from app.agents.nodes.node_base import Node
-from app.core.constants import AGENT_MODEL
-from app.llm.client import get_chat_model
+from app.llm.client import get_chat_model, resolve_node_model
 
 logger = logging.getLogger("chatbot.agent.genchart")
 
@@ -15,11 +14,14 @@ logger = logging.getLogger("chatbot.agent.genchart")
 class GenChartNode(Node):
     def __init__(self):
         self._models = {}
+    name = "genchart"
+    default_model = "gpt-5.4-nano"
 
     def _model_for(self, model: str | None):
-        if model not in self._models:
-            self._models[model] = get_chat_model(model or AGENT_MODEL).with_structured_output(ChartDecision)
-        return self._models[model]
+        resolved_model = resolve_node_model(model, self.default_model)
+        if resolved_model not in self._models:
+            self._models[resolved_model] = get_chat_model(resolved_model).with_structured_output(ChartDecision)
+        return self._models[resolved_model]
 
     async def __call__(self, state: dict, config: RunnableConfig) -> dict:
         try:

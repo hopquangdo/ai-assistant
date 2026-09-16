@@ -17,6 +17,7 @@ from app.schemas.stream import StreamEvent, StreamEventName
 from app.utils.time_context import current_date_system_message
 
 logger = logging.getLogger("chatbot.agent")
+AGENT_NODES = {"clarify", "react", "agent", "tools", "response", "genchart", "suggestion"}
 
 
 @dataclass(frozen=True)
@@ -65,6 +66,20 @@ def _build_input_messages(messages: list) -> list:
     return [current_date_system_message(), *messages]
 
 
+def _node_state_summary(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {"type": type(value).__name__}
+    summary: dict[str, Any] = {"keys": sorted(str(key) for key in value)}
+    for key in ("messages", "charts", "suggestions"):
+        item = value.get(key)
+        if isinstance(item, (list, tuple)):
+            summary[f"{key}_count"] = len(item)
+    for key in ("recursion_hit", "should_generate_chart"):
+        if key in value:
+            summary[key] = bool(value[key])
+    return summary
+
+
 async def run_agent_stream(messages: list, model: str | None = None):
     """Stream tool status, response tokens, final reply, chart and usage."""
     graph = get_orchestrator_graph()
@@ -82,6 +97,7 @@ async def run_agent_stream(messages: list, model: str | None = None):
     done_emitted = False
     chart_pending_emitted = False
     seen_ids: set[int] = set()
+    node_started_at: dict[str, float] = {}
 
     try:
         async for event in graph.astream_events({"messages": input_messages}, version="v2", config=config):
@@ -89,6 +105,39 @@ async def run_agent_stream(messages: list, model: str | None = None):
             data = event.get("data") or {}
             metadata = event.get("metadata") or {}
             node = metadata.get("langgraph_node")
+
+            if node in AGENT_NODES and kind == "on_chain_start":
+                run_id = str(event.get("run_id") or "")
+                node_started_at[run_id] = time.perf_counter()
+                logger.info(
+                    "agent node start node=%s run_id=%s input=%s",
+                    node,
+                    run_id,
+                    _node_state_summary(data.get("input")),
+                )
+            elif node in AGENT_NODES and kind == "on_chain_end":
+                run_id = str(event.get("run_id") or "")
+                started_at = node_started_at.pop(run_id, None)
+                elapsed_ms = (time.perf_counter() - started_at) * 1000 if started_at else None
+                logger.info(
+                    "agent node end node=%s run_id=%s elapsed_ms=%s output=%s",
+                    node,
+                    run_id,
+                    f"{elapsed_ms:.1f}" if elapsed_ms is not None else "unknown",
+                    _node_state_summary(data.get("output")),
+                )
+            elif node in AGENT_NODES and kind == "on_chain_error":
+                run_id = str(event.get("run_id") or "")
+                started_at = node_started_at.pop(run_id, None)
+                elapsed_ms = (time.perf_counter() - started_at) * 1000 if started_at else None
+                error = data.get("error")
+                logger.error(
+                    "agent node error node=%s run_id=%s elapsed_ms=%s error_type=%s",
+                    node,
+                    run_id,
+                    f"{elapsed_ms:.1f}" if elapsed_ms is not None else "unknown",
+                    type(error).__name__,
+                )
 
             if kind == "on_tool_start":
                 yield ToolStartEvent(
@@ -126,7 +175,7 @@ async def run_agent_stream(messages: list, model: str | None = None):
                     yield ChartPendingEvent()
                     chart_pending_emitted = True
             elif kind == "on_chain_end" and (
-                node in {"react", "agent", "tools", "response"}
+                node in {"clarify", "react", "agent", "tools", "response"}
                 or isinstance(data.get("output"), dict)
                 and "should_generate_chart" in data["output"]
             ):
