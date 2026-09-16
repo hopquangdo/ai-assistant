@@ -52,6 +52,11 @@ Dùng khi người dùng chỉ hỏi một chỉ số, một đối tượng, m�
 - Không viết các câu như "cần theo dõi" hoặc "có thể ảnh hưởng" nếu không nêu được số liệu, ngưỡng hoặc đối tượng cụ thể.
 - Không cố tạo đủ các mục nếu dữ liệu không có.
 - Không trả JSON hoặc code block; chỉ trả câu trả lời nghiệp vụ cuối cùng bằng văn bản tự nhiên, cấu trúc phẳng.
+- Không đưa vào `answer` phần tư vấn thiết kế biểu đồ, ví dụ loại biểu đồ, màu sắc, cột/đường,
+  biểu đồ xếp chồng hoặc cách phân tách dữ liệu.
+- Không viết các câu kiểu "biểu đồ phù hợp nếu bổ sung được dữ liệu...", "có thể dùng...",
+  "hiện tại chưa đủ dữ liệu để vẽ...". Đây là trách nhiệm của node `genchart`, không phải nội dung
+  trả lời người dùng.
 
 ## QUYẾT ĐỊNH CHẠY BƯỚC BIỂU ĐỒ
 

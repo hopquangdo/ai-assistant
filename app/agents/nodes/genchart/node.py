@@ -27,9 +27,11 @@ class GenChartNode(Node):
             decision: ChartDecision = await self._model_for(model).ainvoke(
                 [SystemMessage(content=CHART_PROMPT), *state["messages"]], config=config
             )
-            if not decision.has_chart or decision.chart is None:
-                return {"chart": None}
-            return {"chart": ChartPayload(spec=decision.chart).model_dump()}
+            if not decision.has_chart:
+                return {"charts": []}
+            return {
+                "charts": [ChartPayload(spec=chart).model_dump() for chart in decision.charts]
+            }
         except Exception:
             logger.warning("genchart failed; continuing without chart", exc_info=True)
-            return {"chart": None}
+            return {"charts": []}

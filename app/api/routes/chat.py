@@ -40,7 +40,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     model = validate_model(request.model)
     try:
-        new_messages, chart, suggestions, usage = await run_agent(messages, model=model)
+        new_messages, charts, suggestions, usage = await run_agent(messages, model=model)
     except Exception:
         logger.exception("chat failed", extra={"session_id": session_id})
         raise HTTPException(status_code=500, detail="Đã có lỗi xảy ra, vui lòng thử lại.")
@@ -48,7 +48,6 @@ async def chat(request: ChatRequest) -> ChatResponse:
     last_message = new_messages[-1]
     content = last_message.content if hasattr(last_message, "content") else last_message["content"]
 
-    charts = [chart] if chart else []
     chat_service.persist_turn(session_id, messages, new_messages, charts)
     logger.info("chat response", extra={"session_id": session_id, "reply": content})
 
@@ -103,7 +102,7 @@ async def _run_chat_stream(publish, session_id: str, messages: list, model: str 
     new_messages: list = []
     final_content = ""
     usage: dict = {}
-    chart: dict | None = None
+    charts: list[dict] = []
     suggestions: list[str] = []
 
     async for ev in run_agent_stream(messages, model):
@@ -138,7 +137,7 @@ async def _run_chat_stream(publish, session_id: str, messages: list, model: str 
             case UsageEvent(usage=usage_payload):
                 usage = usage_payload
             case ChartEvent(payload=payload):
-                chart = payload
+                charts.append(payload)
             case ChartPendingEvent():
                 await publish(StreamEvent(name="chart_pending", payload={"pending": True}))
             case SuggestionsEvent(suggestions=items):
@@ -147,13 +146,12 @@ async def _run_chat_stream(publish, session_id: str, messages: list, model: str 
                     await publish(StreamEvent(name="suggestions", payload={"suggestions": items}))
 
     final_content = final_content or "Xin lỗi, tôi chưa có câu trả lời."
-    charts = [chart] if chart else []
     chat_service.persist_turn(session_id, messages, new_messages, charts)
 
     logger.info("chat stream response", extra={"session_id": session_id, "reply": final_content})
     await publish(StreamEvent(name="done", payload={"reply": final_content, "session_id": session_id}))
     await publish(StreamEvent(name="usage", payload=usage))
-    if chart:
+    for chart in charts:
         await publish(StreamEvent(name="chart", payload=chart))
 
 

@@ -76,7 +76,7 @@ async def run_agent_stream(messages: list, model: str | None = None):
         "callbacks": [tracker],
     }
     new_messages: list[BaseMessage] = []
-    chart: dict | None = None
+    charts: list[dict] = []
     reply_text = ""
     recursion_hit = False
     done_emitted = False
@@ -153,7 +153,7 @@ async def run_agent_stream(messages: list, model: str | None = None):
             elif kind == "on_chain_end" and node == "genchart":
                 output = data.get("output")
                 if isinstance(output, dict):
-                    chart = output.get("chart")
+                    charts = output.get("charts") or []
             elif kind == "on_chain_end" and node == "suggestion":
                 output = data.get("output")
                 if isinstance(output, dict):
@@ -171,15 +171,15 @@ async def run_agent_stream(messages: list, model: str | None = None):
         new_messages.append(AIMessage(content=reply_text))
     if not done_emitted:
         yield DoneEvent(messages=new_messages, text=reply_text)
-    if chart is not None:
+    for chart in charts:
         yield ChartEvent(payload=chart)
     tracker.log_summary()
     yield UsageEvent(usage=usage.to_dict())
 
 
-async def run_agent(messages: list, model: str | None = None) -> tuple[list, dict | None, list[str], dict]:
+async def run_agent(messages: list, model: str | None = None) -> tuple[list, list[dict], list[str], dict]:
     new_messages: list = []
-    chart = None
+    charts: list[dict] = []
     suggestions: list[str] = []
     usage: dict = {}
     async for event in run_agent_stream(messages, model):
@@ -188,9 +188,9 @@ async def run_agent(messages: list, model: str | None = None) -> tuple[list, dic
         if isinstance(event, DoneEvent):
             new_messages = event.messages
         elif isinstance(event, ChartEvent):
-            chart = event.payload
+            charts.append(event.payload)
         elif isinstance(event, SuggestionsEvent):
             suggestions = event.suggestions
         elif isinstance(event, UsageEvent):
             usage = event.usage
-    return new_messages, chart, suggestions, usage
+    return new_messages, charts, suggestions, usage

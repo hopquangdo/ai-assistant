@@ -7,5 +7,5 @@ class OrchestratorState(TypedDict, total=False):
     messages: Annotated[list, add_messages]
     recursion_hit: bool
     should_generate_chart: bool
-    chart: dict | None
+    charts: list[dict]
     suggestions: list[str]

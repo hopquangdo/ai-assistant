@@ -8,6 +8,7 @@ CHART_SCHEMA_VERSION = 1
 ChartType = Literal["bar", "line", "pie", "donut", "stacked_bar", "area"]
 MAX_CATEGORIES = 12
 MAX_SERIES = 6
+MAX_CHARTS = 4
 
 
 class ChartSeries(BaseModel):
@@ -39,7 +40,15 @@ class ChartSpec(BaseModel):
 
 class ChartDecision(BaseModel):
     has_chart: bool = Field(description="False neu du lieu khong du de ve bieu do.")
-    chart: ChartSpec | None = Field(default=None)
+    charts: list[ChartSpec] = Field(default_factory=list, max_length=MAX_CHARTS)
+
+    @model_validator(mode="after")
+    def check_charts(self) -> "ChartDecision":
+        if self.has_chart and not self.charts:
+            raise ValueError("has_chart=True phai co it nhat mot chart.")
+        if not self.has_chart and self.charts:
+            raise ValueError("has_chart=False khong duoc kem charts.")
+        return self
 
 
 class ChartPayload(BaseModel):

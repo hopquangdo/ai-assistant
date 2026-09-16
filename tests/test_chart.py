@@ -44,9 +44,14 @@ def test_chart_spec_rejects_too_many_categories():
         valid_spec(categories=[str(i) for i in range(13)], series=[{"name": "S", "data": list(range(13))}])
 
 
-def test_chart_decision_without_chart_is_valid():
+def test_chart_decision_without_charts_is_valid():
     decision = ChartDecision(has_chart=False)
-    assert decision.chart is None
+    assert decision.charts == []
+
+
+def test_chart_decision_accepts_multiple_charts():
+    decision = ChartDecision(has_chart=True, charts=[valid_spec(), valid_spec(title="Xếp hạng")])
+    assert len(decision.charts) == 2
 
 
 def test_load_prompt_prefers_markdown():
