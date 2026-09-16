@@ -1,6 +1,6 @@
 import logging
 
-from langchain_core.messages import SystemMessage
+from langchain_core.messages import SystemMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 
 from app.agents.nodes.genchart.prompt import CHART_PROMPT
@@ -24,8 +24,13 @@ class GenChartNode(Node):
     async def __call__(self, state: dict, config: RunnableConfig) -> dict:
         try:
             model = (config.get("configurable") or {}).get("model")
+            tool_messages = [
+                SystemMessage(content=f"TOOL RESULT:\n{message.content}")
+                for message in state["messages"]
+                if isinstance(message, ToolMessage)
+            ]
             decision: ChartDecision = await self._model_for(model).ainvoke(
-                [SystemMessage(content=CHART_PROMPT), *state["messages"]], config=config
+                [SystemMessage(content=CHART_PROMPT), *tool_messages], config=config
             )
             if not decision.has_chart:
                 return {"charts": []}
