@@ -1,19 +1,13 @@
-"""Route health-check và danh sách model."""
+"""Route danh sách model. Health-check dùng chung của svc_core (mount ở root /health)."""
 
 from fastapi import APIRouter
 
 from app.core.constants import AVAILABLE_MODELS
 
-router = APIRouter()
+router = APIRouter(prefix="/models", tags=["models"])
 
 
-@router.get("/health")
-def health() -> dict[str, str]:
-    """Check health của dịch vụ chatbot."""
-    return {"status": "ok"}
-
-
-@router.get("/models")
+@router.get("")
 def list_models() -> dict[str, object]:
     """Danh sách model client được chọn (dropdown ở frontend)."""
     return {"models": AVAILABLE_MODELS, "default": AVAILABLE_MODELS[0]}

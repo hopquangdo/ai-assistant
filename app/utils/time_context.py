@@ -28,7 +28,11 @@ def current_date_system_message() -> SystemMessage:
         content=(
             f"NGÀY HIỆN TẠI CỦA HỆ THỐNG: {today.isoformat()} ({weekday}). "
             "Dùng ngày này làm mốc DUY NHẤT để quy đổi mọi thời gian tương đối trong câu hỏi "
-            "(vd \"tháng này\", \"tháng trước\", \"tuần này\", \"hôm nay\", \"gần đây\") sang ngày "
-            "tháng năm cụ thể. TUYỆT ĐỐI không tự đoán năm hiện tại từ kiến thức khác."
+            "(vd \"tháng này\", \"tháng trước\", \"tuần này\", \"hôm nay\", \"gần đây\", "
+            "\"1 năm vừa qua\") sang ngày tháng năm cụ thể. \"1 năm vừa qua\" nghĩa là từ "
+            "ngày cùng ngày của năm trước đến ngày hiện tại, không phải năm dương lịch trước "
+            "và không phải một tháng bất kỳ. Khi câu hỏi nói rõ khoảng thời gian, bắt buộc "
+            "truyền đúng tuNgay và denNgay vào tool. TUYỆT ĐỐI không tự đoán năm hiện tại từ "
+            "kiến thức khác."
         )
     )

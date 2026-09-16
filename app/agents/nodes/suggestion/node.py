@@ -1,4 +1,5 @@
 import logging
+import inspect
 
 from dqh.ai_core import extract
 from langchain_core.messages import AIMessage, HumanMessage
@@ -33,14 +34,24 @@ class SuggestionNode(Node):
             return {"suggestions": []}
         model_name = (config.get("configurable") or {}).get("model") or AGENT_MODEL
         try:
-            items = await extract(
-                get_chat_model(model_name).bind(max_tokens=250),
-                prompt=f"Câu trả lời vừa rồi:\n{reply[:3000]}\n\nGợi ý 3 câu hỏi tiếp theo.",
-                schema=list[Suggestion],
-                system=SUGGESTION_PROMPT.format(n=3),
-                context=self._context(messages), retries=1, default=[],
-                config=config,
-            )
+            extract_kwargs = {
+                "prompt": f"Câu trả lời vừa rồi:\n{reply[:3000]}\n\nGợi ý 3 câu hỏi tiếp theo.",
+                "schema": list[Suggestion],
+                "system": SUGGESTION_PROMPT.format(n=3),
+                "context": self._context(messages),
+                "retries": 1,
+                "default": [],
+            }
+            if "config" in inspect.signature(extract).parameters:
+                extract_kwargs["config"] = config
+            model = get_chat_model(model_name).bind(max_tokens=250)
+            try:
+                items = await extract(model, **extract_kwargs)
+            except TypeError as exc:
+                if "unexpected keyword argument 'config'" not in str(exc):
+                    raise
+                extract_kwargs.pop("config", None)
+                items = await extract(model, **extract_kwargs)
         except Exception:
             logger.warning("suggestion generation failed", exc_info=True)
             items = []

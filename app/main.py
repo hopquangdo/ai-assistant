@@ -9,7 +9,7 @@ from dqh.ai_core import load_mcp_tools
 from dqh.svc_core.transports.http.fastapi import create_app
 
 from app.agents.orchestrator import warmup_agent
-from app.api.routes import router
+from app.api.routes import router as api_router
 from app.core.logging import configure_logging
 from app.core.config import get_settings
 from app.tools.registry import ALL_TOOLS, set_tools
@@ -36,8 +36,8 @@ app = create_app(
     title="Contract Chatbot",
     lifespan=lifespan,
     cors_origins=["http://localhost:3000"],
-    routers=[router],
-    router_prefix="/api/v1",
+    routers=[api_router],
+    router_prefix="/api",
 )
 
 
