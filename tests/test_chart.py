@@ -1,10 +1,10 @@
 import pytest
 from pydantic import ValidationError
 
-from app.agents.nodes.react.prompt import SELECT_PROMPT
-from app.agents.nodes.genchart.prompt import CHART_PROMPT
-from app.schemas.chart import ChartDecision, ChartSeries, ChartSpec
-from app.utils.text import load_prompt
+from src.agents.nodes.react.prompt import SELECT_PROMPT
+from src.agents.nodes.genchart.prompt import CHART_PROMPT
+from src.schemas.chart import ChartDecision, ChartSeries, ChartSpec
+from src.utils.text import load_prompt
 
 
 def valid_spec(**overrides):

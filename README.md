@@ -21,7 +21,7 @@ MCP từ backend Java (Spring AI).
 
 ```powershell
 cd D:\Workspace\Work\Rdsic\Viettel\chatbot
-.\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+.\.venv\Scripts\python.exe -m uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 Chatbot chạy ở `http://localhost:8000`. Log khởi động sẽ in số tool + tên tool đã nạp được từ MCP theo

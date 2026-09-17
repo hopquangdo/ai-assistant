@@ -179,7 +179,7 @@ TOOLS = [
                "cho phần sản lượng). Không truyền nhà thầu thì trả dữ liệu toàn hệ thống, vô nghĩa.",
         resp="nhaThauId, tenNhaThau, sanLuong (cấu trúc như sanluong_tool), hopDong (như hopdong_tool), tramTon (như "
              "doituongton_tool), vuongMac (như vuongmac_tool), phanCong (như phancong_tool) — mỗi mục giữ nguyên cấu "
-             "trúc kết quả của tool domain tương ứng khi không lọc.",
+             "trúc kết quả của tool models tương ứng khi không lọc.",
         scope="Dùng khi câu hỏi cần bức tranh chung của MỘT nhà thầu cụ thể, phải đối chiếu nhiều mảng cùng lúc: nhà "
               "thầu X đang làm mấy trạm và tiến độ ra sao, còn tồn mấy trạm, đang vướng gì, tình hình chung thế nào.",
         oos="Không xếp hạng / so sánh nhiều nhà thầu với nhau. Không có breakdown địa bàn theo tỉnh của nhà thầu. "

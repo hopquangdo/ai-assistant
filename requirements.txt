@@ -9,9 +9,12 @@ langchain-openai
 langchain-mcp-adapters
 httpx
 streamlit
+psycopg[binary,pool]
+langgraph-checkpoint-postgres
+redis>=5
+python-multipart>=0.0.9
 
-# Lõi LLM/agent dùng chung (model factory, ReAct runtime, usage tracking, MCP client).
+# Internal reusable packages.
 -e ./package/ai_core[mcp]
-
-# Lõi FastAPI dùng chung (app factory, response envelope, error handler, middleware, SSE).
 -e ./package/svc_core[fastapi]
+

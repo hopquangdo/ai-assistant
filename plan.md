@@ -175,9 +175,9 @@ from langgraph.errors import GraphRecursionError
 
 from dqh.ai_core import Agent
 
-from app.agents.prompts import SELECT_PROMPT
-from app.core.constants import AGENT_MODEL, AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT
-from app.llm.client import get_chat_model
+from src.agents.prompts import SELECT_PROMPT
+from src.core.constants import AGENT_MODEL, AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT
+from src.llm.client import get_chat_model
 from langchain_core.messages import AIMessage
 
 
@@ -217,9 +217,9 @@ from functools import cached_property
 from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, SystemMessage
 
-from app.agents.prompts import RESPONSE_PROMPT
-from app.core.constants import AGENT_MODEL
-from app.llm.client import get_chat_model
+from src.agents.prompts import RESPONSE_PROMPT
+from src.core.constants import AGENT_MODEL
+from src.llm.client import get_chat_model
 
 
 def strip_trailing_placeholder(messages: list) -> list:
@@ -254,10 +254,10 @@ from functools import cached_property
 
 from langchain_core.messages import SystemMessage
 
-from app.agents.prompts import CHART_PROMPT
-from app.core.constants import AGENT_MODEL
-from app.llm.client import get_chat_model
-from app.schemas.chart import ChartDecision, ChartPayload
+from src.agents.prompts import CHART_PROMPT
+from src.core.constants import AGENT_MODEL
+from src.llm.client import get_chat_model
+from src.schemas.chart import ChartDecision, ChartPayload
 
 logger = logging.getLogger("chatbot.agent.genchart")
 
@@ -309,11 +309,11 @@ from functools import lru_cache
 
 from langgraph.graph import END, START, StateGraph
 
-from app.agents.nodes.node_genchart import GenChartNode
-from app.agents.nodes.node_react import ReactNode
-from app.agents.nodes.node_response import ResponseNode
-from app.agents.state import OrchestratorState
-from app.tools.registry import ALL_TOOLS
+from src.agents.nodes.node_genchart import GenChartNode
+from src.agents.nodes.node_react import ReactNode
+from src.agents.nodes.node_response import ResponseNode
+from src.agents.state import OrchestratorState
+from src.tools.registry import ALL_TOOLS
 
 
 def _route_after_react(state: OrchestratorState) -> str:
