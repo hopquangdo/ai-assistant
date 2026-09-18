@@ -13,6 +13,7 @@ class RedisStreamQueue:
     def __init__(self, client: Redis, stream_id: str) -> None:
         self._client = client
         self._key = f"chat:stream:{stream_id}"
+        self._owner_key = f"chat:stream:owner:{stream_id}"
 
     async def exists(self) -> bool:
         return bool(await self._client.exists(self._key))
@@ -22,6 +23,14 @@ class RedisStreamQueue:
         goi ngay sau create_chat_stream khong bi 404 do race condition."""
         await self._client.rpush(self._key, _OPEN_MARKER)
         await self._client.expire(self._key, _TTL_SECONDS)
+
+    async def set_owner(self, user_id: str) -> None:
+        """Ghi nho nguoi tao stream -- subscribe_chat_stream dung de tu choi user khac
+        doc stream nay (ownership check, xem plan_auth_chatbot.md muc 6)."""
+        await self._client.set(self._owner_key, user_id, ex=_TTL_SECONDS)
+
+    async def owner(self) -> str | None:
+        return await self._client.get(self._owner_key)
 
     async def put(self, frame: str) -> None:
         await self._client.rpush(self._key, frame)

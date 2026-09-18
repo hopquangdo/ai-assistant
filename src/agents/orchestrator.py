@@ -99,7 +99,7 @@ async def run_agent_stream(messages: list, model: str | None = None, thread_id: 
     recursion_hit = False
     done_emitted = False
     chart_pending_emitted = False
-    seen_ids: set[int] = set()
+    seen_ids: set[tuple] = set()
     node_started_at: dict[str, float] = {}
 
     try:
@@ -192,8 +192,17 @@ async def run_agent_stream(messages: list, model: str | None = None, thread_id: 
                     continue
                 recursion_hit = recursion_hit or bool(output.get("recursion_hit"))
                 for message in output.get("messages") or []:
-                    if id(message) not in seen_ids:
-                        seen_ids.add(id(message))
+                    # Dedupe theo noi dung/tool_call_id, khong dung id() cua object Python:
+                    # message di qua checkpointer Postgres co the bi serialize lai thanh
+                    # object moi (id() khac) du cung 1 message, gay ro ri ToolMessage
+                    # (JSON tho cua tool) bi phat lai thanh mot AI message rieng.
+                    key = (
+                        type(message).__name__,
+                        getattr(message, "tool_call_id", None),
+                        message.content,
+                    )
+                    if key not in seen_ids:
+                        seen_ids.add(key)
                         new_messages.append(message)
                         yield MessageEvent(message=message)
                 if "should_generate_chart" in output and output.get("messages"):

@@ -20,10 +20,20 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     thread_id     TEXT NOT NULL,
     role          TEXT NOT NULL CHECK (role IN ('user', 'assistant',  'system')),
     content       TEXT NOT NULL DEFAULT '',
-    occurred_at   TIMESTAMPTZ NOT NULL,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX IF NOT EXISTS ix_chat_messages_conversation_id
     ON chat_messages(conversation_id);
+
+
+CREATE TABLE IF NOT EXISTS chat_charts (
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    message_id  UUID NOT NULL REFERENCES chat_messages(id) ON DELETE CASCADE,
+    payload     JSONB NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS ix_chat_charts_message_id
+    ON chat_charts(message_id);
 

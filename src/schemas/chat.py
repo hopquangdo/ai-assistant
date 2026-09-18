@@ -42,10 +42,30 @@ class ConversationResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class ConversationCreateResponse(BaseModel):
+    """DTO trả về khi tạo một conversation mới (trước khi gửi tin nhắn đầu tiên)."""
+
+    session_id: str
+    created_at: datetime
+
+
+class ConversationSummary(BaseModel):
+    """Thông tin rút gọn của một conversation, dùng cho danh sách sidebar."""
+
+    session_id: str
+    title: str
+    message_count: int
+    updated_at: Optional[datetime] = None
+
+
 class MessagePageResponse(PageResponse[ChatMessageItem]):
     """DTO trả về tin nhắn theo trang."""
 
     session_id: str
+
+
+class ConversationPageResponse(PageResponse[ConversationSummary]):
+    """DTO trả về danh sách hội thoại theo trang."""
 
 
 class ChatStreamResponse(BaseModel):

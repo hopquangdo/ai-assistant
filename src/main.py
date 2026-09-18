@@ -16,9 +16,11 @@ from dqh.ai_core import load_mcp_tools
 from dqh.svc_core.transports.http.fastapi import create_app
 
 from src.agents.orchestrator import warmup_agent
-from src.api.routes import router as api_router
+from app.api.routes import router as api_router
+from src.middleware import AuthMiddleware
 from src.core.logging import configure_logging
 from src.core.config import get_settings
+from src.infrastructure.db.client import db_pool_factory
 from src.infrastructure.memory.client import checkpointer_factory
 from src.infrastructure.message_queue.client import redis_client_factory
 from src.infrastructure.tool_registry import tool_registry
@@ -41,6 +43,7 @@ async def lifespan(app: FastAPI):
     yield
     await checkpointer_factory.close()
     await redis_client_factory.close()
+    await db_pool_factory.close()
 
 
 app = create_app(
@@ -50,6 +53,8 @@ app = create_app(
     routers=[api_router],
     router_prefix="/api",
 )
+# Xac thuc tap trung cho moi API chatbot (trừ /health) -- xem src/middleware.py.
+app.add_middleware(AuthMiddleware)
 
 
 if __name__ == "__main__":

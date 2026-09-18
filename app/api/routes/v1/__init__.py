@@ -2,9 +2,9 @@
 
 from fastapi import APIRouter
 
-from src.api.routes.v1.chat_stream import router as chat_stream_router
-from src.api.routes.v1.conversation import router as conversation_router
-from src.api.routes.v1.models import router as models_router
+from app.api.routes.v1.chat_stream import router as chat_stream_router
+from app.api.routes.v1.conversation import router as conversation_router
+from app.api.routes.v1.models import router as models_router
 
 router = APIRouter(prefix="/v1")
 router.include_router(chat_stream_router)

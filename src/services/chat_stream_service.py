@@ -14,7 +14,7 @@ import uuid
 from dqh.ai_core import DoneEvent, ErrorEvent, MessageEvent, TokenEvent, ToolEndEvent, ToolStartEvent
 from dqh.svc_core.transports.sse import sse as _sse
 
-from src.api.dependencies import tool_preview
+from app.api.dependencies import tool_preview
 from src.agents.orchestrator import (
     ChartEvent,
     ChartPendingEvent,
@@ -34,31 +34,59 @@ logger = get_logger("services.chat_stream")
 class ChatStreamService:
     """StreamManager cho 1 luot chat: tao hang doi SSE tren Redis, chay agent nen, dich event."""
 
-    async def create_chat_stream(self, session_id: str, user_message: str, model: str | None) -> str:
-        """Tao stream_id va chay agent nen. Route chi can goi method nay roi tra ve stream_id --
-        khong biet gi ve task ben trong.
+    async def create_chat_stream(
+        self, session_id: str, user_message: str, model: str | None, user_id: str
+    ) -> str:
+        """Luu tin nhan user xuong DB roi tao stream_id va chay agent nen. Route chi can goi
+        method nay roi tra ve stream_id -- khong biet gi ve task ben trong.
 
-        Chi gui CAU HOI MOI cho graph (khong tu ghep lai full history tu MemoryStore nua) --
-        lich su hoi thoai do checkpointer Postgres (thread_id=session_id) tu nho, tranh tinh
-        trang 2 noi cung luu history roi cong don vao nhau lam messages phinh to moi luot."""
+        Tin nhan user duoc luu (persist_turn kieu cu da bo) NGAY tai day, truoc khi agent
+        chay -- GET conversation/messages sau do thay ngay tin nhan nay du bot chua tra loi
+        xong hay client da ngat ket noi SSE.
+
+        Chi gui CAU HOI MOI cho graph (khong tu ghep lai full history nua) -- lich su hoi
+        thoai do checkpointer Postgres (thread_id=session_id) tu nho, tranh tinh trang 2 noi
+        cung luu history roi cong don vao nhau lam messages phinh to moi luot.
+
+        claim_session tu choi neu session_id da thuoc ve user khac (khong cho doat quyen
+        hoi thoai bang cach doan/truyen session_id cua nguoi khac)."""
+        await conversation_service.claim_session(session_id, user_id)
+        run_id = str(uuid.uuid4())
+        await conversation_service.save_user_message(session_id, run_id, user_message)
+
         stream_id = str(uuid.uuid4())
         queue = RedisStreamQueue(redis_client_factory.get(), stream_id)
         await queue.open()
+        await queue.set_owner(user_id)
         logger.info("chat stream created", extra={"stream_id": stream_id, "session_id": session_id})
         asyncio.create_task(
-            self._produce(queue, stream_id, session_id, user_message, model),
+            self._produce(queue, stream_id, session_id, run_id, user_message, model),
             name=f"chat-stream-{stream_id}",
         )
         return stream_id
 
-    async def subscribe_chat_stream(self, stream_id: str) -> RedisStreamQueue | None:
+    async def subscribe_chat_stream(self, stream_id: str, user_id: str) -> RedisStreamQueue | None:
+        """Tra None (-> 404 o route) neu stream khong ton tai HOAC thuoc ve user khac --
+        khong phan biet 2 truong hop nay de tranh lo stream co ton tai hay khong."""
         queue = RedisStreamQueue(redis_client_factory.get(), stream_id)
         if not await queue.exists():
+            return None
+        owner = await queue.owner()
+        if owner is not None and owner != user_id:
+            logger.warning(
+                "chat stream ownership denied", extra={"stream_id": stream_id, "user_id": user_id}
+            )
             return None
         return queue
 
     async def _produce(
-        self, queue: RedisStreamQueue, stream_id: str, session_id: str, user_message: str, model: str | None
+        self,
+        queue: RedisStreamQueue,
+        stream_id: str,
+        session_id: str,
+        run_id: str,
+        user_message: str,
+        model: str | None,
     ) -> None:
         """Chay agent nen, chuyen event thanh SSE frame va luu ket qua luot chat."""
 
@@ -66,14 +94,14 @@ class ChatStreamService:
             await queue.put(_sse(event.name, event.payload))
 
         try:
-            await self._run(publish, session_id, user_message, model)
+            await self._run(publish, session_id, run_id, user_message, model)
         except Exception:
             logger.exception("chat stream failed", extra={"stream_id": stream_id, "session_id": session_id})
             await publish(StreamEvent(name="error", payload={"message": "Da co loi xay ra, vui long thu lai."}))
         finally:
             await queue.close()
 
-    async def _run(self, publish, session_id: str, user_message: str, model: str | None) -> None:
+    async def _run(self, publish, session_id: str, run_id: str, user_message: str, model: str | None) -> None:
         logger.info(
             "chat stream request session_id=%s message_preview=%r",
             session_id,
@@ -149,10 +177,7 @@ class ChatStreamService:
                         await publish(StreamEvent(name="suggestions", payload={"suggestions": items}))
 
         final_content = final_content or "Xin loi, toi chua co cau tra loi."
-        # MemoryStore van can full history (rieng voi state cua graph/checkpointer) de phuc vu
-        # cac API doc conversation/messages -- build lai o day, khong lien quan input da gui graph.
-        history_for_persist = conversation_service.build_messages(session_id, user_message)
-        conversation_service.persist_turn(session_id, history_for_persist, new_messages, charts)
+        await conversation_service.save_assistant_turn(session_id, run_id, final_content, charts)
 
         logger.info(
             "chat stream response session_id=%s reply_length=%d message_count=%d chart_count=%d",

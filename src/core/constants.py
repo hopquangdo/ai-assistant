@@ -36,3 +36,8 @@ RECURSION_LIMIT_FALLBACK_TEXT = (
     "(có thể câu hỏi cần một khái niệm nghiệp vụ mà hệ thống chưa theo dõi). "
     "Anh/chị có thể mô tả lại theo hướng cụ thể hơn, hoặc hỏi từng phần riêng lẻ."
 )
+
+# Tool có tiền tố này KHÔNG được cache kết quả (side-effect: tạo/sửa/xoá/gửi request) hoặc dữ liệu
+# đổi liên tục theo thời gian thực -- xem ReActNode._execute_tool trong
+# src/agents/nodes/react/node.py. Thêm tiền tố mới vào đây khi có tool mới không idempotent.
+TOOL_CACHE_EXCLUDED_PREFIXES: tuple[str, ...] = ("thoigian_",)

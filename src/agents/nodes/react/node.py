@@ -1,9 +1,12 @@
 ﻿import asyncio
+import hashlib
+import json
 import logging
 from typing import List
 
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_core.runnables import Runnable, RunnableConfig
+from langchain_core.runnables.config import get_async_callback_manager_for_config
 from langchain_core.tools import BaseTool
 from langgraph.errors import GraphRecursionError
 
@@ -11,8 +14,10 @@ from src.agents.nodes.node_base import Node
 from src.agents.nodes.react.prompt import SELECT_PROMPT
 from src.agents.nodes.react.schema import ToolCall
 from src.agents.nodes.react.state import ReActState
-from src.core.constants import AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT
+from src.core.config import get_settings
+from src.core.constants import AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT, TOOL_CACHE_EXCLUDED_PREFIXES
 from src.infrastructure.llm_client import llm_client_factory
+from src.infrastructure.message_queue.client import redis_client_factory
 from src.schemas.stream import StreamEvent, StreamEventName
 from src.utils import dispatch_custom_event
 
@@ -37,8 +42,40 @@ class ReActNode(Node):
             self._models[resolved_model] = llm_client_factory.get_chat_model(resolved_model).bind_tools(self._tools)
         return self._models[resolved_model]
 
+    @staticmethod
+    def _cache_key(call: ToolCall) -> str | None:
+        """None nếu tool nằm trong danh sách loại trừ (side-effect / dữ liệu real-time)."""
+        name = call["name"]
+        if name.startswith(TOOL_CACHE_EXCLUDED_PREFIXES):
+            return None
+        args_digest = hashlib.sha256(
+            json.dumps(call["args"], sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
+        return f"tool_cache:{name}:{args_digest}"
+
     async def _execute_tool(self, call: ToolCall, config: RunnableConfig) -> ToolMessage:
         tool = self._tools_by_name[call["name"]]
+        cache_key = self._cache_key(call)
+        redis = redis_client_factory.get()
+
+        if cache_key is None:
+            logger.info("tool cache skip (excluded) name=%s", call["name"])
+        else:
+            cached = await redis.get(cache_key)
+            if cached is not None:
+                logger.info("tool cache hit name=%s key=%s", call["name"], cache_key)
+                # Cache hit bo qua tool.ainvoke() nen khong tu phat on_tool_start/on_tool_end;
+                # tu ban ra qua callback manager de astream_events/UsageTracker van thay du.
+                callback_manager = get_async_callback_manager_for_config(config)
+                run_manager = await callback_manager.on_tool_start(
+                    {"name": tool.name, "description": tool.description},
+                    json.dumps(call["args"], sort_keys=True, default=str),
+                    name=tool.name,
+                )
+                await run_manager.on_tool_end(cached)
+                return ToolMessage(content=cached, tool_call_id=call["id"], name=call["name"])
+            logger.info("tool cache miss name=%s key=%s", call["name"], cache_key)
+
         try:
             async with self.__tool_semaphore:
                 result = await tool.ainvoke(
@@ -46,7 +83,14 @@ class ReActNode(Node):
                     config=config,
                 )
         except Exception as exc:  # noqa: BLE001
+            logger.exception("tool execution failed name=%s args=%s", call["name"], call["args"])
             result = f"Tool error: {exc}"
+        else:
+            if cache_key is not None:
+                ttl = get_settings().tool_cache_ttl_seconds
+                await redis.set(cache_key, str(result), ex=ttl)
+                logger.info("tool cache set name=%s key=%s ttl=%s", call["name"], cache_key, ttl)
+
         return ToolMessage(
             content=str(result),
             tool_call_id=call["id"],
@@ -60,7 +104,6 @@ class ReActNode(Node):
                         ↓
                       ~3s
     """
-
     async def __call_tools(
             self, calls: List[ToolCall], config: RunnableConfig
     ):
