@@ -12,6 +12,7 @@ COPY package ./package
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY src ./src
+COPY app ./app
 
 USER chatbot
 ENV APP_PORT=8000
