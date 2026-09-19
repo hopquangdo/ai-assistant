@@ -16,7 +16,7 @@ class ClarifyNode(Node):
     """Kiá»ƒm tra tham sá»‘ báº¯t buá»™c trÆ°á»›c khi ReAct gá»i tool."""
 
     name = "clarify"
-    default_model = "gpt-4o-mini"
+    default_model = "gpt-5.4-nano"
 
     def __init__(self, tools: list):
         self._tool_catalog = "\n\n".join(

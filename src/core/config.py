@@ -1,6 +1,5 @@
 from functools import lru_cache
 
-from pydantic import model_validator
 from pydantic_settings import SettingsConfigDict
 
 from dqh.ai_core import Settings as AiCoreSettings
@@ -14,8 +13,7 @@ class Settings(AiCoreSettings):
 
     # MCP — các field mcp_* kế thừa từ dqh.ai_core.Settings. Override default cho backend Java này:
     # McpApiKeyFilter yêu cầu header "X-API-Key" chứa khóa thô (không có prefix "Bearer").
-    # mcp_server_url không đặt default cứng nữa — nếu .env không set MCP_SERVER_URL riêng, nó được
-    # suy ra từ backend_base_url + "/mcp" (xem validator bên dưới), để .env chỉ cần 1 host duy nhất.
+    # mcp_server_url (env MCP_SERVER_URL) là bắt buộc, ví dụ http://host:8080/mcp.
     mcp_server_url: str = ""
     mcp_auth_header: str = "X-API-Key"
     mcp_auth_scheme: str = ""
@@ -25,10 +23,6 @@ class Settings(AiCoreSettings):
     app_port: int = 8000
     log_level: str = "INFO"
 
-    # Backend Spring — chatbot khong tu verify JWT, forward Bearer token cho
-    # GET {backend_base_url}/api/v1/xac-thuc/toi de xac thuc (xem src/security/auth.py).
-    backend_base_url: str = ""
-    auth_cache_ttl_seconds: int = 30
 
     # Gợi ý câu hỏi tiếp theo sau mỗi câu trả lời (1 lần gọi LLM nhẹ, xem app/followups.py).
     enable_followups: bool = True
@@ -47,11 +41,6 @@ class Settings(AiCoreSettings):
     # cấu hình riêng. Tool có side-effect phải khai vào TOOL_CACHE_EXCLUDED_PREFIXES.
     tool_cache_ttl_seconds: int = 300
 
-    @model_validator(mode="after")
-    def _default_mcp_server_url(self) -> "Settings":
-        if not self.mcp_server_url and self.backend_base_url:
-            self.mcp_server_url = f"{self.backend_base_url.rstrip('/')}/mcp"
-        return self
 
 
 @lru_cache

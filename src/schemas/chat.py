@@ -1,22 +1,12 @@
 """Định nghĩa schema request/response cho API chatbot."""
 
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from src.schemas.common import PageResponse
-
-
-class ChatMessageItem(BaseModel):
-    """Tin nhắn chuẩn hóa để trả về client."""
-
-    role: str
-    content: str
-
 
 class ChatRequest(BaseModel):
-    """Schema cho payload chat từ client."""
+    """Schema cho payload chat từ Backend."""
 
     message: str
     session_id: Optional[str] = None
@@ -24,48 +14,13 @@ class ChatRequest(BaseModel):
 
 
 class ChatResponse(BaseModel):
-    """Schema cho phản hồi chat trả về client."""
+    """Schema cho phản hồi chat."""
 
     reply: str
     session_id: Optional[str] = None
     suggestions: list[str] = Field(default_factory=list)
     charts: list[dict] = Field(default_factory=list)
     usage: dict = Field(default_factory=dict)
-
-
-class ConversationResponse(BaseModel):
-    """DTO trả về conversation kèm lịch sử và chart."""
-
-    session_id: str
-    messages: list[ChatMessageItem] = Field(default_factory=list)
-    charts: list[dict] = Field(default_factory=list)
-    updated_at: Optional[datetime] = None
-
-
-class ConversationCreateResponse(BaseModel):
-    """DTO trả về khi tạo một conversation mới (trước khi gửi tin nhắn đầu tiên)."""
-
-    session_id: str
-    created_at: datetime
-
-
-class ConversationSummary(BaseModel):
-    """Thông tin rút gọn của một conversation, dùng cho danh sách sidebar."""
-
-    session_id: str
-    title: str
-    message_count: int
-    updated_at: Optional[datetime] = None
-
-
-class MessagePageResponse(PageResponse[ChatMessageItem]):
-    """DTO trả về tin nhắn theo trang."""
-
-    session_id: str
-
-
-class ConversationPageResponse(PageResponse[ConversationSummary]):
-    """DTO trả về danh sách hội thoại theo trang."""
 
 
 class ChatStreamResponse(BaseModel):

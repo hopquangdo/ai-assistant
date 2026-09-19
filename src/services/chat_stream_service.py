@@ -5,10 +5,11 @@ User message -> ChatStreamService -> Orchestrator/LangGraph -> RedisStreamQueue 
 Queue dua tren Redis (khong con la dict asyncio.Queue trong tien trinh) de producer
 (POST /chat/stream) va consumer (GET /chat/stream/{id}) co the o 2 process/worker khac nhau.
 
-ChatStreamService khong biet gi ve cach conversation duoc luu -- doc lich su/ghi trace deu
-uy quyen cho ConversationService."""
+Chatbot KHONG luu conversation/message: Backend (BFF) so huu lich su, tu luu tin nhan user truoc khi
+goi day va tu luu cau tra loi tu frame SSE `done` + `chart`. Lich su cho LLM do checkpointer nho."""
 
 import asyncio
+import time
 import uuid
 
 from dqh.ai_core import DoneEvent, ErrorEvent, MessageEvent, TokenEvent, ToolEndEvent, ToolStartEvent
@@ -23,10 +24,10 @@ from src.agents.orchestrator import (
     run_agent_stream,
 )
 from src.core.logging import get_logger
+from src.core.request_context import mcp_token_var, user_id_var
 from src.infrastructure.message_queue.client import redis_client_factory
 from src.infrastructure.message_queue.queue import RedisStreamQueue
 from src.schemas.stream import StreamEvent, StreamEventName
-from src.services.conversation_service import conversation_service
 
 logger = get_logger("services.chat_stream")
 
@@ -35,32 +36,21 @@ class ChatStreamService:
     """StreamManager cho 1 luot chat: tao hang doi SSE tren Redis, chay agent nen, dich event."""
 
     async def create_chat_stream(
-        self, session_id: str, user_message: str, model: str | None, user_id: str
+        self, session_id: str, user_message: str, model: str | None, user_id: str, mcp_token: str | None = None
     ) -> str:
-        """Luu tin nhan user xuong DB roi tao stream_id va chay agent nen. Route chi can goi
-        method nay roi tra ve stream_id -- khong biet gi ve task ben trong.
+        """Tao stream_id va chay agent nen. Route chi can goi method nay roi tra ve stream_id --
+        khong biet gi ve task ben trong.
 
-        Tin nhan user duoc luu (persist_turn kieu cu da bo) NGAY tai day, truoc khi agent
-        chay -- GET conversation/messages sau do thay ngay tin nhan nay du bot chua tra loi
-        xong hay client da ngat ket noi SSE.
-
-        Chi gui CAU HOI MOI cho graph (khong tu ghep lai full history nua) -- lich su hoi
-        thoai do checkpointer Postgres (thread_id=session_id) tu nho, tranh tinh trang 2 noi
-        cung luu history roi cong don vao nhau lam messages phinh to moi luot.
-
-        claim_session tu choi neu session_id da thuoc ve user khac (khong cho doat quyen
-        hoi thoai bang cach doan/truyen session_id cua nguoi khac)."""
-        await conversation_service.claim_session(session_id, user_id)
-        run_id = str(uuid.uuid4())
-        await conversation_service.save_user_message(session_id, run_id, user_message)
-
+        Chi gui CAU HOI MOI cho graph -- lich su hoi thoai do checkpointer Postgres
+        (thread_id=session_id) tu nho. Viec kiem tra quyen so huu session va luu tin nhan la cua
+        Backend, chatbot chi gan owner cho stream de GET stream kiem tra dung user."""
         stream_id = str(uuid.uuid4())
         queue = RedisStreamQueue(redis_client_factory.get(), stream_id)
         await queue.open()
         await queue.set_owner(user_id)
         logger.info("chat stream created", extra={"stream_id": stream_id, "session_id": session_id})
         asyncio.create_task(
-            self._produce(queue, stream_id, session_id, run_id, user_message, model),
+            self._produce(queue, stream_id, session_id, user_message, model, user_id, mcp_token),
             name=f"chat-stream-{stream_id}",
         )
         return stream_id
@@ -84,24 +74,32 @@ class ChatStreamService:
         queue: RedisStreamQueue,
         stream_id: str,
         session_id: str,
-        run_id: str,
         user_message: str,
         model: str | None,
+        user_id: str | None = None,
+        mcp_token: str | None = None,
     ) -> None:
-        """Chay agent nen, chuyen event thanh SSE frame va luu ket qua luot chat."""
+        """Chay agent nen va chuyen event thanh SSE frame."""
+        # Task rieng cua luot chat nay -> ContextVar khong ro ri sang luot khac.
+        user_id_var.set(user_id)
+        mcp_token_var.set(mcp_token)
 
         async def publish(event: StreamEvent) -> None:
-            await queue.put(_sse(event.name, event.payload))
+            payload = event.payload
+            # `chart` bị backend lưu nguyên payload vào lịch sử nên không gắn thêm field ở đây.
+            if event.name != "chart" and isinstance(payload, dict):
+                payload = {**payload, "ts": int(time.time() * 1000)}
+            await queue.put(_sse(event.name, payload))
 
         try:
-            await self._run(publish, session_id, run_id, user_message, model)
+            await self._run(publish, session_id, user_message, model)
         except Exception:
             logger.exception("chat stream failed", extra={"stream_id": stream_id, "session_id": session_id})
             await publish(StreamEvent(name="error", payload={"message": "Da co loi xay ra, vui long thu lai."}))
         finally:
             await queue.close()
 
-    async def _run(self, publish, session_id: str, run_id: str, user_message: str, model: str | None) -> None:
+    async def _run(self, publish, session_id: str, user_message: str, model: str | None) -> None:
         logger.info(
             "chat stream request session_id=%s message_preview=%r",
             session_id,
@@ -177,7 +175,6 @@ class ChatStreamService:
                         await publish(StreamEvent(name="suggestions", payload={"suggestions": items}))
 
         final_content = final_content or "Xin loi, toi chua co cau tra loi."
-        await conversation_service.save_assistant_turn(session_id, run_id, final_content, charts)
 
         logger.info(
             "chat stream response session_id=%s reply_length=%d message_count=%d chart_count=%d",
@@ -190,6 +187,7 @@ class ChatStreamService:
         await publish(StreamEvent(name="usage", payload=usage))
         for chart in charts:
             await publish(StreamEvent(name="chart", payload=chart))
+
 
 
 chat_stream_service = ChatStreamService()

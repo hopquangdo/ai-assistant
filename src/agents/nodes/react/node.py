@@ -17,6 +17,7 @@ from src.agents.nodes.react.state import ReActState
 from src.core.config import get_settings
 from src.core.constants import AGENT_RECURSION_LIMIT, RECURSION_LIMIT_FALLBACK_TEXT, TOOL_CACHE_EXCLUDED_PREFIXES
 from src.infrastructure.llm_client import llm_client_factory
+from src.core.request_context import user_id_var
 from src.infrastructure.message_queue.client import redis_client_factory
 from src.schemas.stream import StreamEvent, StreamEventName
 from src.utils import dispatch_custom_event
@@ -51,7 +52,8 @@ class ReActNode(Node):
         args_digest = hashlib.sha256(
             json.dumps(call["args"], sort_keys=True, default=str).encode("utf-8")
         ).hexdigest()
-        return f"tool_cache:{name}:{args_digest}"
+        # Theo nguoi dung: MCP tra du lieu theo pham vi (khu vuc) cua tung nguoi, cache dung chung se lo du lieu cheo.
+        return f"tool_cache:{user_id_var.get() or 'anonymous'}:{name}:{args_digest}"
 
     async def _execute_tool(self, call: ToolCall, config: RunnableConfig) -> ToolMessage:
         tool = self._tools_by_name[call["name"]]
